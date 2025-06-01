@@ -1,22 +1,17 @@
 import React, { useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
-
-import { useState } from "react";
 import { signInWithPopup, provider, auth, signOut } from "./firebase";
 
 const position = [51.505, -0.09];
 const mockEvents = [
-
-
   { id: 1, position: [51.505, -0.09], title: "Концерт в парке" },
   { id: 2, position: [51.507, -0.087], title: "Игра в футбол" },
 ];
 
-const [user, setUser] = useState(null);
-
+// вход в аккаунт через Google НАЧАЛО//
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState(null); 
 
   const handleLogin = async () => {
     try {
@@ -28,10 +23,16 @@ function App() {
     }
   };
 
+  // вход в аккаунт через Google КОНЕЦ//
+
+  // выход из аккаунта  Google НАЧАЛО//
   const handleLogout = () => {
     signOut(auth);
     setUser(null);
   };
+   // выход из аккаунта  Google КОНЕЦ//
+
+   //Кнопка входа НАЧАЛО//
 
   if (!user) {
     return (
@@ -46,19 +47,21 @@ function App() {
     );
   }
 
-  <div className="absolute top-4 left-4 bg-white rounded-xl shadow px-4 py-2 z-[1000]">
-  <p>Привет, {user.displayName}</p>
-  <button
-    onClick={handleLogout}
-    className="text-sm text-red-500 underline hover:text-red-600"
-  >
-    Выйти
-  </button>
-</div>
-
+  //Кнопка входа КОНЕЦ//
 
   return (
-    <div className="h-screen w-screen">
+    <div className="h-screen w-screen relative">
+      {/* Приветствие и кнопка выхода */}
+      <div className="absolute top-4 right-[50px] bg-white rounded-xl shadow px-4 py-2 z-[1000]">
+        <p>Привет, {user.displayName}</p>
+        <button
+          onClick={handleLogout}
+          className="text-sm text-red-500 underline hover:text-red-600"
+        >
+          Выйти
+        </button>
+      </div>
+
       <MapContainer
         center={position}
         zoom={13}
