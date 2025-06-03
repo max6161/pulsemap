@@ -5,9 +5,28 @@ import { signInWithPopup, provider, auth, signOut } from "./firebase";
 
 const position = [51.505, -0.09];
 const mockEvents = [
-  { id: 1, position: [51.505, -0.09], title: "Концерт в парке" },
-  { id: 2, position: [51.507, -0.087], title: "Игра в футбол" },
+  {
+    id: 1,
+    position: [56.8389, 60.6057], // Координаты Екатеринбурга
+    title: "Здесь живёт разработчик данного приложения",
+  },
 ];
+
+
+
+function AddMarker({ onAdd }) {
+  useMapEvents({
+    click(e) {
+      const { lat, lng } = e.latlng;
+      const title = prompt("Введите название события:");
+      if (title) {
+        onAdd({ id: Date.now(), position: [lat, lng], title });
+      }
+    },
+  });
+  return null;
+}
+
 
 // вход в аккаунт через Google НАЧАЛО//
 function App() {
@@ -49,6 +68,7 @@ function App() {
 
   //Кнопка входа КОНЕЦ//
 
+  //панель приветствия НАЧАЛО//
   return (
     <div className="h-screen w-screen relative">
       {/* Приветствие и кнопка выхода */}
@@ -61,7 +81,8 @@ function App() {
           Выйти
         </button>
       </div>
-
+      //панель приветствия КОНЕЦ//
+      
       <MapContainer
         center={position}
         zoom={13}
