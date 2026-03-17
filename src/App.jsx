@@ -12,6 +12,7 @@ import {
 import L from "leaflet";
 import { signInWithPopup, provider, auth, signOut } from "./firebase";
 import { motion } from "framer-motion";
+import SidePanel from "./components/SidePanel"
 
 const position = [51.505, -0.09];
 
@@ -119,92 +120,18 @@ function App() {
 
   return (
     <div className="h-screen w-screen relative">
-      <div
-        className="fixed top-[5px] left-[5px] w-[400px] h-[457px] z-[1000] p-4 flex flex-col gap-3"
-        style={{ backgroundColor: "rgba(35, 79, 87, 0.5)", borderRadius: "18px" }}
-      >
-        <div className="flex justify-between items-center">
-          <div
-            className="px-4 py-2 text-white font-bold rounded-xl shadow"
-            style={{
-              backgroundColor: "#01333F",
-              flexGrow: 1,
-              marginRight: "15px",
-              textAlign: "center",
-              border: "2px solid #D355C6",
-              boxShadow: "0 0 10px #D355C6",
-            }}
-          >
-            Привет, {user.displayName}
-          </div>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 text-white font-bold rounded-xl shadow"
-            style={{
-              backgroundColor: "#01333F",
-              border: "2px solid #018CA4",
-              boxShadow: "0 0 10px #018CA4",
-            }}
-          >
-            Выход
-          </button>
-        </div>
 
-        <div
-          className="mt-4 w-full h-[250px] rounded-xl overflow-y-auto p-4 relative"
-          style={{ border: "2px solid #936EFF", boxShadow: "0 0 10px #936EFF" }}
-        >
-          <div
-            className="absolute inset-0 rounded-xl"
-            style={{
-              backgroundImage: `url('img/fonts_information.jpg')`,
-              backgroundSize: "contain",
-              backgroundPosition: "center",
-              backgroundRepeat: "no-repeat",
-              transform: "rotate(180deg)",
-              opacity: 0.5,
-              zIndex: 0,
-            }}
-          ></div>
-
-          <div className="relative z-10 text-white flex items-center justify-center text-center" style={{ fontSize: 20 }}>
-            <p className="font-medium">{currentInfo || infoText}</p>
-          </div>
-        </div>
-
-        <div className="flex justify-center mt-auto" style={{ gap: "100px", marginBottom: "20px" }}>
-          <button
-            onClick={() => setIsPlacingCheckpoint(true)}
-            className="w-[60px] h-[60px] bg-no-repeat bg-center bg-cover"
-            style={{
-              backgroundImage: "url('src/img/1.jpg')",
-              backgroundColor: "#01333F",
-              border: "2px solid #00BFFF",
-              boxShadow: "0 0 10px #00BFFF",
-              borderRadius: "50% 50% 50% 0",
-              transform: "rotate(-45deg)",
-              backgroundSize: "60% 60%",
-              backgroundPosition: "center",
-              backgroundRepeat: "no-repeat",
-            }}
-          ></button>
-
-          <button
-            className="w-[60px] h-[60px] bg-no-repeat bg-center bg-cover"
-            style={{
-              backgroundImage: "url('src/img/2.jpg')",
-              backgroundColor: "#01333F",
-              border: "2px solid #FF69B4",
-              boxShadow: "0 0 10px #FF69B4",
-              borderRadius: "50% 50% 50% 0",
-              transform: "rotate(-45deg)",
-              backgroundSize: "60% 60%",
-              backgroundPosition: "center",
-              backgroundRepeat: "no-repeat",
-            }}
-          ></button>
-        </div>
-      </div>
+      <SidePanel
+  user={user}
+  onLogout={handleLogout}
+  infoText={currentInfo || infoText}
+  setIsPlacingCheckpoint={setIsPlacingCheckpoint}
+  tempCheckpoint={tempCheckpoint}
+  inputText={inputText}
+  setInputText={setInputText}
+  handleSaveCheckpoint={handleSaveCheckpoint}
+/>
+      
 
       <MapContainer
         center={position}
