@@ -1,6 +1,5 @@
-const publicIconCursor = new URL('src/img/1.jpg', import.meta.url).href;
-
 import React, { useState, useEffect } from "react";
+
 import {
   MapContainer,
   TileLayer,
@@ -10,41 +9,36 @@ import {
   ZoomControl,
 } from "react-leaflet";
 import L from "leaflet";
+
 import { signInWithPopup, provider, auth, signOut } from "./firebase";
-import { motion } from "framer-motion";
-import SidePanel from "./components/SidePanel"
+import SidePanel from "./components/SidePanel";
+
+import "./index.css";
+import "leaflet/dist/leaflet.css";
 
 const position = [51.505, -0.09];
-
 
 const customCheckpointIcon = L.divIcon({
   html: `<div style="
     width: 60px;
     height: 60px;
     background-color: #01333F;
-    background-image: url('src/img/1.jpg');
-    background-size: 60% 60%;
-    background-position: center;
-    background-repeat: no-repeat;
     border-radius: 50% 50% 50% 0;
     transform: rotate(-45deg);
     border: 2px solid #00BFFF;
     box-shadow: 0 0 10px #00BFFF;
   "></div>`,
-  className: '', // сбросить Leaflet-классы
+  className: "",
   iconSize: [60, 60],
-  iconAnchor: [30, 60], // якорь внизу центра
+  iconAnchor: [30, 60],
 });
-
-
-
-
 
 function App() {
   const [user, setUser] = useState(null);
   const [infoText, setInfoText] = useState(
     "Создай на карте свой первый Эвент-Поинт и его увидят другие пользователи!"
   );
+
   const [checkpoints, setCheckpoints] = useState([]);
   const [isPlacingCheckpoint, setIsPlacingCheckpoint] = useState(false);
   const [tempCheckpoint, setTempCheckpoint] = useState(null);
@@ -58,6 +52,7 @@ function App() {
         setTempCheckpoint(null);
       }
     };
+
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
   }, []);
@@ -80,31 +75,42 @@ function App() {
     useMapEvents({
       click(e) {
         if (isPlacingCheckpoint) {
-          const confirmPlacement = window.confirm("Хотите ли вы установить свой Эвент-Пойнт?");
+          const confirmPlacement = window.confirm(
+            "Хотите ли вы установить свой Эвент-Пойнт?"
+          );
+
           if (confirmPlacement) {
-            setTempCheckpoint({ lat: e.latlng.lat, lng: e.latlng.lng });
+            setTempCheckpoint({
+              lat: e.latlng.lat,
+              lng: e.latlng.lng,
+            });
+
             setIsPlacingCheckpoint(false);
             setInfoText("");
           }
         }
       },
     });
+
     return null;
   }
 
   const handleSaveCheckpoint = () => {
     if (!tempCheckpoint || !inputText.trim()) return;
+
     const newPoint = {
       id: Date.now(),
       position: [tempCheckpoint.lat, tempCheckpoint.lng],
       title: inputText,
     };
+
     setCheckpoints([...checkpoints, newPoint]);
     setTempCheckpoint(null);
     setInputText("");
     setCurrentInfo(newPoint.title);
   };
 
+  // LOGIN SCREEN
   if (!user) {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-100">
@@ -119,75 +125,68 @@ function App() {
   }
 
   return (
-    <div className="h-screen w-screen relative">
+    <div className="h-screen w-screen relative overflow-hidden">
 
+      {/* SIDE PANEL */}
       <SidePanel
-  user={user}
-  onLogout={handleLogout}
-  infoText={currentInfo || infoText}
-  setIsPlacingCheckpoint={setIsPlacingCheckpoint}
-  tempCheckpoint={tempCheckpoint}
-  inputText={inputText}
-  setInputText={setInputText}
-  handleSaveCheckpoint={handleSaveCheckpoint}
-/>
-      
+        user={user}
+        onLogout={handleLogout}
+        infoText={currentInfo || infoText}
+        setIsPlacingCheckpoint={setIsPlacingCheckpoint}
+        tempCheckpoint={tempCheckpoint}
+        inputText={inputText}
+        setInputText={setInputText}
+        handleSaveCheckpoint={handleSaveCheckpoint}
+      />
 
+      {/* MAP */}
       <MapContainer
         center={position}
         zoom={13}
         scrollWheelZoom={true}
-        className={`h-full w-full ${isPlacingCheckpoint ? 'cursor-checkpoint' : ''}`}
+        className={`h-full w-full ${
+          isPlacingCheckpoint ? "cursor-checkpoint" : ""
+        }`}
         zoomControl={false}
-        style={{ cursor: isPlacingCheckpoint ? `url(${publicIconCursor}) 15 15, auto` : "auto" }}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+
         <MapClickHandler />
+
         {checkpoints.map((event) => (
           <Marker
             key={event.id}
             position={event.position}
-            eventHandlers={{ click: () => setCurrentInfo(event.title) }}
-             icon={customCheckpointIcon}
+            icon={customCheckpointIcon}
+            eventHandlers={{
+              click: () => setCurrentInfo(event.title),
+            }}
           >
             <Popup>{event.title}</Popup>
           </Marker>
         ))}
+
         <ZoomControl position="topright" />
       </MapContainer>
 
+      {/* EVENT INPUT (фикс внизу) */}
       {tempCheckpoint && (
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 30 }}
-          className="fixed p-4 rounded-xl shadow-xl z-[2000]"
-          style={{
-            left: `${tempCheckpoint.lng}px`,
-            top: `${tempCheckpoint.lat}px`,
-            transform: "translate(-50%, -100%)",
-            backgroundColor: "rgba(35, 79, 87, 0.8)",
-            width: "300px",
-            border: "2px solid #936EFF",
-            boxShadow: "0 0 10px #936EFF",
-          }}
-        >
+        <div className="event-input-modal">
+
           <textarea
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder="Введите описание вашего события..."
-            className="w-full h-24 p-2 rounded"
+            placeholder="Введите описание события..."
           />
-          <button
-            onClick={handleSaveCheckpoint}
-            className="mt-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-          >
+
+          <button onClick={handleSaveCheckpoint}>
             Сохранить Эвент-Поинт
           </button>
-        </motion.div>
+
+        </div>
       )}
     </div>
   );

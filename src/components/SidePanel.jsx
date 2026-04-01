@@ -5,14 +5,15 @@ export default function SidePanel({
   user,
   onLogout,
   infoText,
+  
   setIsPlacingCheckpoint,
   tempCheckpoint,
   inputText,
   setInputText,
   handleSaveCheckpoint
 }) {
-
   const [collapsed, setCollapsed] = useState(false);
+  const [activeButton, setActiveButton] = useState(null);
 
   return (
     <div className={`side-panel ${collapsed ? "collapsed" : ""}`}>
@@ -35,11 +36,8 @@ export default function SidePanel({
 
       {/* INFO */}
       <div className="panel-info">
-
         {!tempCheckpoint && (
-          <div className="info-text">
-            {infoText}
-          </div>
+          <div className="info-text">{infoText}</div>
         )}
 
         {tempCheckpoint && (
@@ -48,27 +46,29 @@ export default function SidePanel({
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               placeholder="Введите описание..."
-              style={{ width: "100%", height: "60px", borderRadius: "6px" }}
+              className="panel-textarea"
             />
-
-            <button
-              onClick={handleSaveCheckpoint}
-              style={{ marginTop: "5px" }}
-            >
+            <button onClick={handleSaveCheckpoint}>
               Сохранить
             </button>
           </div>
         )}
-
       </div>
 
       {/* BUTTONS */}
       <div className="panel-buttons">
         <button
-          className="event-button public"
-          onClick={() => setIsPlacingCheckpoint(true)}
+          className={`event-button public ${activeButton === "public" ? "active" : ""}`}
+          onClick={() => {
+            setIsPlacingCheckpoint(true);
+            setActiveButton("public");
+          }}
         />
-        <button className="event-button private" />
+
+        <button
+          className={`event-button private ${activeButton === "private" ? "active" : ""}`}
+          onClick={() => setActiveButton("private")}
+        />
       </div>
 
       {/* HANDLE */}

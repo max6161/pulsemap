@@ -1,13 +1,12 @@
 .side-panel {
   position: absolute;
   top: 5px;
-
   left: 5px;
 
   width: 400px;
-  height: 300px;
+  height: 320px;
 
-  background: rgba(35,79,87,0.65);
+  background: rgba(35,79,87,0.7);
   border-radius: 18px;
 
   padding: 10px;
@@ -23,7 +22,7 @@
 
 /* COLLAPSED */
 .side-panel.collapsed {
-  height: 190px;
+  height: 200px;
 }
 
 /* HEADER */
@@ -31,6 +30,15 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.panel-user,
+.panel-logout {
+  background: #01333F;
+  color: white;
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 8px;
 }
 
 .panel-user {
@@ -41,17 +49,6 @@
   border: 2px solid #018CA4;
 }
 
-.panel-user,
-.panel-logout {
-  background: #01333F;
-  color: white;
-
-  padding: 4px 10px;
-  font-size: 12px;
-
-  border-radius: 8px;
-}
-
 /* SEARCH */
 .panel-search {
   margin: 6px 0;
@@ -59,12 +56,9 @@
 
 .panel-search input {
   width: 100%;
-  padding: 5px 8px;
-
+  padding: 6px;
   border-radius: 6px;
   border: none;
-
-  font-size: 12px;
 }
 
 /* INFO */
@@ -75,12 +69,8 @@
   padding: 8px;
   color: white;
 
-  font-size: 13px;
-
-  flex-grow: 1;           /* 👉 занимает всё доступное */
-  max-height: 150px;      /* 👉 примерно 8 строк */
+  height: 130px;
   overflow-y: auto;
-  
 }
 
 /* текст */
@@ -96,20 +86,24 @@
   overflow: hidden;
 }
 
+/* textarea */
+.panel-textarea {
+  width: 100%;
+  height: 60px;
+  border-radius: 6px;
+  padding: 5px;
+}
+
 /* BUTTONS */
 .panel-buttons {
   display: flex;
   justify-content: center;
-  gap: 60px;
+  gap: 40px;
 
-  margin-top: auto; /* 👉 ПРИЖИМАЕТ ВНИЗ */
+  margin-top: 10px;
 }
 
-/* кнопки всегда видны */
-.side-panel.collapsed .panel-buttons {
-  display: flex;
-}
-
+/* кнопки */
 .event-button {
   width: 40px;
   height: 40px;
@@ -128,6 +122,12 @@
   border: 2px solid #FF69B4;
 }
 
+/* ACTIVE */
+.event-button.active {
+  box-shadow: 0 0 12px #00BFFF;
+  transform: rotate(-45deg) scale(1.1);
+}
+
 /* HANDLE */
 .panel-handle {
   width: 50px;
@@ -137,7 +137,6 @@
   border-radius: 4px;
 
   margin: 8px auto 0;
-
   cursor: pointer;
 }
 
@@ -145,16 +144,15 @@
 @media (max-width:768px){
 
   .side-panel{
-    top:auto;
-    bottom:0;
-    left:0;
+    top: 5px;
+    left: 5px;
 
-    width:100%;
-    height:260px;
+    width: calc(100% - 10px);
+    height: 260px;
   }
 
   .side-panel.collapsed {
-    height: 170px;
+    height: 180px;
   }
 
 }
