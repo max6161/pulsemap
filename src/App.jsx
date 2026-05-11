@@ -1,57 +1,3 @@
-const publicIconCursor = new URL("src/img/1.jpg", import.meta.url).href;
-
-import React, { useState, useEffect } from "react";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  useMapEvents,
-  ZoomControl,
-} from "react-leaflet";
-import L from "leaflet";
-
-import {
-  signInWithPopup,
-  provider,
-  auth,
-  signOut,
-  onAuthStateChanged,
-  db,
-} from "./firebase";
-
-import {
-  collection,
-  addDoc,
-  onSnapshot,
-  deleteDoc,
-  doc,
-  Timestamp,
-} from "firebase/firestore";
-
-import SidePanel from "./components/SidePanel";
-
-const position = [51.505, -0.09];
-
-const customCheckpointIcon = L.divIcon({
-  html: `<div style="
-    width: 60px;
-    height: 60px;
-    background-color: #01333F;
-    background-image: url('src/img/1.jpg');
-    background-size: 60% 60%;
-    background-position: center;
-    background-repeat: no-repeat;
-    border-radius: 50% 50% 50% 0;
-    transform: rotate(-45deg);
-    border: 2px solid #00BFFF;
-    box-shadow: 0 0 10px #00BFFF;
-  "></div>`,
-  className: "",
-  iconSize: [60, 60],
-  iconAnchor: [30, 60],
-});
-
 function App() {
   const [user, setUser] = useState(null);
 
@@ -72,6 +18,12 @@ function App() {
     });
 
     return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    getRedirectResult(auth).catch((error) => {
+      console.error("Ошибка redirect-входа:", error);
+    });
   }, []);
 
   useEffect(() => {
@@ -131,7 +83,13 @@ function App() {
 
   const handleLogin = async () => {
     try {
-      await signInWithPopup(auth, provider);
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+      if (isMobile) {
+        await signInWithRedirect(auth, provider);
+      } else {
+        await signInWithPopup(auth, provider);
+      }
     } catch (error) {
       console.error("Ошибка входа:", error);
     }
@@ -268,4 +226,5 @@ function App() {
     </div>
   );
 }
+
 export default App;
