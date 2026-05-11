@@ -12,7 +12,7 @@ import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBWBrJC7Yxd3us_eBOm2M3IIlbb_t_6fj8",
-  authDomain: "pulsemap-f6930.firebaseapp.com",
+  authDomain: "pulsemap.vercel.app",
   projectId: "pulsemap-f6930",
   storageBucket: "pulsemap-f6930.appspot.com",
   messagingSenderId: "1015121809814",
