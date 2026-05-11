@@ -14,6 +14,7 @@ import { signInWithPopup, provider, auth, signOut } from "./firebase";
 import SidePanel from "./components/SidePanel";
 
 const position = [51.505, -0.09];
+const STORAGE_KEY = "pulsemap_checkpoints";
 
 const customCheckpointIcon = L.divIcon({
   html: `<div style="
@@ -41,12 +42,38 @@ function App() {
     "Создай на карте свой первый Эвент-Поинт и его увидят другие пользователи!"
   );
 
-  const [checkpoints, setCheckpoints] = useState([]);
+  const [checkpoints, setCheckpoints] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+
+      if (!saved) return [];
+
+      const parsed = JSON.parse(saved);
+
+      if (!Array.isArray(parsed)) return [];
+
+      return parsed.filter((point) => {
+        return !point.expiresAt || point.expiresAt > Date.now();
+      });
+    } catch (error) {
+      console.error("Ошибка чтения localStorage:", error);
+      return [];
+    }
+  });
+
   const [isPlacingCheckpoint, setIsPlacingCheckpoint] = useState(false);
   const [tempCheckpoint, setTempCheckpoint] = useState(null);
   const [currentInfo, setCurrentInfo] = useState(null);
   const [inputText, setInputText] = useState("");
   const [eventLifetime, setEventLifetime] = useState(3 * 60 * 60 * 1000);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(checkpoints));
+    } catch (error) {
+      console.error("Ошибка записи localStorage:", error);
+    }
+  }, [checkpoints]);
 
   useEffect(() => {
     const handleEsc = (e) => {
@@ -108,10 +135,11 @@ function App() {
     const newPoint = {
       id: Date.now(),
       position: [tempCheckpoint.lat, tempCheckpoint.lng],
-      title: inputText,
+      title: inputText.trim(),
       createdAt: Date.now(),
       expiresAt: Date.now() + eventLifetime,
       lifetime: eventLifetime,
+      type: "public",
     };
 
     setCheckpoints((prev) => [...prev, newPoint]);
