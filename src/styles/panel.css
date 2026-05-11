@@ -23,7 +23,7 @@
 
 /* COLLAPSED */
 .side-panel.collapsed {
-  height: 190px;
+  height: 210px;
 }
 
 /* HEADER */
@@ -89,12 +89,13 @@
   line-height: 1.3;
 }
 
-/* COLLAPSED — нормальные 2 строки */
+/* COLLAPSED INFO */
 .side-panel.collapsed .panel-info {
   flex-grow: 0;
-  height: 50px;
-  min-height: 50px;
-  max-height: 50px;
+
+  height: 52px;
+  min-height: 52px;
+  max-height: 52px;
 
   overflow: hidden;
 }
@@ -117,13 +118,16 @@
   gap: 60px;
 
   margin-top: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+
+  flex-shrink: 0;
 }
 
 .side-panel.collapsed .panel-buttons {
   display: flex;
 }
 
+/* EVENT BUTTON */
 .event-button {
   width: 40px;
   height: 40px;
@@ -156,7 +160,7 @@
   background: rgba(220, 220, 220, 0.95);
   border-radius: 999px;
 
-  margin: 4px auto 0;
+  margin: 0 auto;
 
   cursor: pointer;
   flex-shrink: 0;
@@ -178,7 +182,7 @@
   }
 
   .side-panel.collapsed {
-    height: 180px;
+    height: 215px;
   }
 
   .side-panel.collapsed .panel-info {
@@ -194,12 +198,12 @@
 
   .panel-buttons {
     margin-top: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
 
   .panel-handle {
-    width: 120px;
-    height: 18px;
-    margin-top: 4px;
+    width: 110px;
+    height: 16px;
+    margin: 0 auto;
   }
 }
