@@ -137,19 +137,13 @@ function App() {
     return () => window.removeEventListener("keydown", handleEsc);
   }, []);
 
-  const handleLogin = async () => {
-    try {
-      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-      if (isMobile) {
-        await signInWithRedirect(auth, provider);
-      } else {
-        await signInWithPopup(auth, provider);
-      }
-    } catch (error) {
-      console.error("Ошибка входа:", error);
-    }
-  };
+   const handleLogin = async () => {
+  try {
+    await signInWithRedirect(auth, provider);
+  } catch (error) {
+    console.error("Ошибка входа:", error);
+  }
+};
 
   const handleLogout = async () => {
     try {
