@@ -201,6 +201,11 @@
     height: 220px;
   }
 
+  .side-panel:not(.collapsed) .panel-info {
+    height: 115px;
+    max-height: 115px;
+  }
+
   .panel-bottom {
     bottom: 3px;
     height: 72px;
