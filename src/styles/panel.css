@@ -642,3 +642,23 @@
   background: rgba(255, 105, 180, 0.22);
   box-shadow: 0 0 12px rgba(255, 105, 180, 0.45);
 }
+
+/* MOBILE EVENT EDIT EXPANDED */
+@media (max-width: 768px) {
+  .side-panel:has(.event-edit-mode) {
+    height: 390px;
+  }
+
+  .side-panel:has(.event-edit-mode) .panel-info {
+    height: 225px;
+    max-height: 225px;
+  }
+
+  .side-panel:has(.event-edit-mode) .event-description-input {
+    min-height: 70px;
+  }
+
+  .side-panel:has(.event-edit-mode) .panel-bottom {
+    bottom: 3px;
+  }
+}
