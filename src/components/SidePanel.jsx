@@ -5,7 +5,6 @@ export default function SidePanel({
   user,
   onLogout,
   infoText,
-  
   setIsPlacingCheckpoint,
   tempCheckpoint,
   inputText,
@@ -13,31 +12,85 @@ export default function SidePanel({
   handleSaveCheckpoint
 }) {
   const [collapsed, setCollapsed] = useState(false);
-  const [activeButton, setActiveButton] = useState(null);
+  const [activeFilter, setActiveFilter] = useState("all");
+
+  const filters = [
+    { id: "all", label: "Все" },
+    { id: "music", label: "🎵 Музыка" },
+    { id: "games", label: "🎲 Игры" },
+    { id: "chill", label: "☕ Чилл" },
+    { id: "dating", label: "❤️ Знакомства" }
+  ];
 
   return (
     <div className={`side-panel ${collapsed ? "collapsed" : ""}`}>
+      <div className="panel-top">
+        <div className="panel-profile">
+          <div className="panel-avatar">
+            {user?.photoURL ? (
+              <img src={user.photoURL} alt="avatar" />
+            ) : (
+              <span>{user?.displayName?.[0] || "U"}</span>
+            )}
+          </div>
 
-      {/* HEADER */}
-      <div className="panel-header">
-        <div className="panel-user">
-          Привет, {user?.displayName}
+          <div className="panel-user-text">
+            Привет, {user?.displayName || "User"}
+          </div>
         </div>
+
+        <div className="panel-live">
+          <span className="live-dot" />
+          <span>4 активных рядом</span>
+        </div>
+
+        <button className="panel-icon-button" type="button">
+          🌐
+        </button>
+
+        <button className="panel-icon-button" type="button">
+          ⚙️
+        </button>
 
         <button className="panel-logout" onClick={onLogout}>
           Выход
         </button>
       </div>
 
-      {/* SEARCH */}
-      <div className="panel-search">
-        <input placeholder="Поиск эвент-поинтов..." />
-      </div>
+      {!collapsed && (
+        <>
+          <div className="panel-search">
+            <span className="search-icon">⌕</span>
+            <input placeholder="Поиск эвент-поинтов..." />
+          </div>
 
-      {/* INFO */}
+          <div className="panel-filters">
+            {filters.map((filter) => (
+              <button
+                key={filter.id}
+                type="button"
+                className={`filter-chip ${
+                  activeFilter === filter.id ? "active" : ""
+                }`}
+                onClick={() => setActiveFilter(filter.id)}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
       <div className="panel-info">
         {!tempCheckpoint && (
-          <div className="info-text">{infoText}</div>
+          <div className="info-text">
+            <div className="info-title">
+              Создай первый Эвент-Пойнт
+            </div>
+            <div className="info-description">
+              {infoText}
+            </div>
+          </div>
         )}
 
         {tempCheckpoint && (
@@ -48,35 +101,39 @@ export default function SidePanel({
               placeholder="Введите описание..."
               className="panel-textarea"
             />
-            <button onClick={handleSaveCheckpoint}>
+
+            <button
+              onClick={handleSaveCheckpoint}
+              className="panel-save-button"
+            >
               Сохранить
             </button>
           </div>
         )}
       </div>
 
-      {/* BUTTONS */}
-      <div className="panel-buttons">
+      <div className="panel-bottom">
         <button
-          className={`event-button public ${activeButton === "public" ? "active" : ""}`}
-          onClick={() => {
-            setIsPlacingCheckpoint(true);
-            setActiveButton("public");
-          }}
+          className="event-button public"
+          onClick={() => setIsPlacingCheckpoint(true)}
+          aria-label="Создать публичный эвент"
+        >
+          <span>📍</span>
+        </button>
+
+        <button
+          className="panel-handle"
+          onClick={() => setCollapsed(!collapsed)}
+          aria-label="Свернуть или развернуть меню"
         />
 
         <button
-          className={`event-button private ${activeButton === "private" ? "active" : ""}`}
-          onClick={() => setActiveButton("private")}
-        />
+          className="event-button private"
+          aria-label="Создать приватный эвент"
+        >
+          <span>🔒</span>
+        </button>
       </div>
-
-      {/* HANDLE */}
-      <div
-        className="panel-handle"
-        onClick={() => setCollapsed(!collapsed)}
-      />
-
     </div>
   );
 }
