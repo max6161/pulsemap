@@ -10,11 +10,18 @@ import {
   ZoomControl,
 } from "react-leaflet";
 import L from "leaflet";
-import { signInWithPopup, provider, auth, signOut } from "./firebase";
+import { signInWithPopup, provider, auth, signOut, db } from "./firebase";
+import {
+  collection,
+  addDoc,
+  onSnapshot,
+  deleteDoc,
+  doc,
+  Timestamp,
+} from "firebase/firestore";
 import SidePanel from "./components/SidePanel";
 
 const position = [51.505, -0.09];
-const STORAGE_KEY = "pulsemap_checkpoints";
 
 const customCheckpointIcon = L.divIcon({
   html: `<div style="
@@ -42,25 +49,7 @@ function App() {
     "Создай на карте свой первый Эвент-Поинт и его увидят другие пользователи!"
   );
 
-  const [checkpoints, setCheckpoints] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-
-      if (!saved) return [];
-
-      const parsed = JSON.parse(saved);
-
-      if (!Array.isArray(parsed)) return [];
-
-      return parsed.filter((point) => {
-        return !point.expiresAt || point.expiresAt > Date.now();
-      });
-    } catch (error) {
-      console.error("Ошибка чтения localStorage:", error);
-      return [];
-    }
-  });
-
+  const [checkpoints, setCheckpoints] = useState([]);
   const [isPlacingCheckpoint, setIsPlacingCheckpoint] = useState(false);
   const [tempCheckpoint, setTempCheckpoint] = useState(null);
   const [currentInfo, setCurrentInfo] = useState(null);
@@ -68,12 +57,47 @@ function App() {
   const [eventLifetime, setEventLifetime] = useState(3 * 60 * 60 * 1000);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(checkpoints));
-    } catch (error) {
-      console.error("Ошибка записи localStorage:", error);
-    }
-  }, [checkpoints]);
+    const unsubscribe = onSnapshot(collection(db, "events"), (snapshot) => {
+      const now = Date.now();
+
+      const loadedEvents = snapshot.docs
+        .map((document) => {
+          const data = document.data();
+
+          return {
+            id: document.id,
+            title: data.title,
+            position: data.position,
+            type: data.type || "public",
+            userId: data.userId,
+            userName: data.userName,
+            createdAt: data.createdAt?.toMillis?.() || null,
+            expiresAt: data.expiresAt?.toMillis?.() || null,
+          };
+        })
+        .filter((event) => {
+          return Array.isArray(event.position) && event.expiresAt > now;
+        });
+
+      setCheckpoints(loadedEvents);
+
+      snapshot.docs.forEach((document) => {
+        const data = document.data();
+        const expiresAt = data.expiresAt?.toMillis?.();
+
+        if (
+          expiresAt &&
+          expiresAt <= now &&
+          auth.currentUser &&
+          data.userId === auth.currentUser.uid
+        ) {
+          deleteDoc(doc(db, "events", document.id));
+        }
+      });
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const handleEsc = (e) => {
@@ -85,16 +109,6 @@ function App() {
 
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
-  }, []);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCheckpoints((prev) =>
-        prev.filter((point) => !point.expiresAt || point.expiresAt > Date.now())
-      );
-    }, 10000);
-
-    return () => clearInterval(interval);
   }, []);
 
   const handleLogin = async () => {
@@ -129,23 +143,31 @@ function App() {
     return null;
   }
 
-  const handleSaveCheckpoint = () => {
-    if (!tempCheckpoint || !inputText.trim()) return;
+  const handleSaveCheckpoint = async () => {
+    if (!tempCheckpoint || !inputText.trim() || !user) return;
+
+    const expiresAtMs = Date.now() + eventLifetime;
 
     const newPoint = {
-      id: Date.now(),
-      position: [tempCheckpoint.lat, tempCheckpoint.lng],
       title: inputText.trim(),
-      createdAt: Date.now(),
-      expiresAt: Date.now() + eventLifetime,
-      lifetime: eventLifetime,
+      position: [tempCheckpoint.lat, tempCheckpoint.lng],
       type: "public",
+      userId: user.uid,
+      userName: user.displayName || "Unknown user",
+      createdAt: Timestamp.now(),
+      expiresAt: Timestamp.fromMillis(expiresAtMs),
+      lifetime: eventLifetime,
     };
 
-    setCheckpoints((prev) => [...prev, newPoint]);
-    setTempCheckpoint(null);
-    setInputText("");
-    setCurrentInfo(newPoint.title);
+    try {
+      await addDoc(collection(db, "events"), newPoint);
+
+      setTempCheckpoint(null);
+      setInputText("");
+      setCurrentInfo(newPoint.title);
+    } catch (error) {
+      console.error("Ошибка сохранения события в Firestore:", error);
+    }
   };
 
   if (!user) {
@@ -209,8 +231,12 @@ function App() {
               <div>
                 <strong>{event.title}</strong>
                 <br />
+                Автор: {event.userName || "Unknown user"}
+                <br />
                 Живёт до:{" "}
-                {new Date(event.expiresAt).toLocaleString("ru-RU")}
+                {event.expiresAt
+                  ? new Date(event.expiresAt).toLocaleString("ru-RU")
+                  : "неизвестно"}
               </div>
             </Popup>
           </Marker>
