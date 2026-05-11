@@ -6,10 +6,13 @@ export default function SidePanel({
   onLogout,
   infoText,
   setIsPlacingCheckpoint,
+  isPlacingCheckpoint,
   tempCheckpoint,
   inputText,
   setInputText,
-  handleSaveCheckpoint
+  handleSaveCheckpoint,
+  eventLifetime,
+  setEventLifetime
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [activeFilter, setActiveFilter] = useState("all");
@@ -22,8 +25,20 @@ export default function SidePanel({
     { id: "dating", label: "❤️ Знакомства" }
   ];
 
+  const lifetimeOptions = [
+    { label: "1ч", value: 1 * 60 * 60 * 1000 },
+    { label: "3ч", value: 3 * 60 * 60 * 1000 },
+    { label: "12ч", value: 12 * 60 * 60 * 1000 },
+    { label: "1 день", value: 24 * 60 * 60 * 1000 },
+    { label: "3 дня", value: 3 * 24 * 60 * 60 * 1000 }
+  ];
+
   return (
-    <div className={`side-panel ${collapsed ? "collapsed" : ""}`}>
+    <div
+      className={`side-panel ${collapsed ? "collapsed" : ""} ${
+        isPlacingCheckpoint ? "placing-mode" : ""
+      }`}
+    >
       <div className="panel-top">
         <div className="panel-profile">
           <div className="panel-avatar">
@@ -81,32 +96,67 @@ export default function SidePanel({
         </>
       )}
 
-      <div className="panel-info">
+      {isPlacingCheckpoint && (
+        <div className="placing-status">
+          <span className="placing-dot" />
+          <span>Выбери место на карте</span>
+
+          <button type="button" onClick={() => setIsPlacingCheckpoint(false)}>
+            Отмена
+          </button>
+        </div>
+      )}
+
+      <div className={`panel-info ${tempCheckpoint ? "event-edit-mode" : ""}`}>
         {!tempCheckpoint && (
           <div className="info-text">
             <div className="info-title">
-              Создай первый Эвент-Пойнт
+              {isPlacingCheckpoint
+                ? "Режим создания Эвент-Пойнта"
+                : "Создай первый Эвент-Пойнт"}
             </div>
+
             <div className="info-description">
-              {infoText}
+              {isPlacingCheckpoint
+                ? "Нажми на карту в том месте, где хочешь поставить новый эвент."
+                : infoText}
             </div>
           </div>
         )}
 
         {tempCheckpoint && (
-          <div>
+          <div className="event-edit-content">
             <textarea
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="Введите описание..."
-              className="panel-textarea"
+              placeholder="Опиши свой Эвент-Пойнт..."
+              className="event-description-input"
+              autoFocus
             />
 
-            <button
-              onClick={handleSaveCheckpoint}
-              className="panel-save-button"
-            >
-              Сохранить
+            <div className="event-lifetime">
+              <div className="event-lifetime-title">
+                Сколько будет активен?
+              </div>
+
+              <div className="event-lifetime-options">
+                {lifetimeOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={`lifetime-chip ${
+                      eventLifetime === option.value ? "active" : ""
+                    }`}
+                    onClick={() => setEventLifetime(option.value)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button onClick={handleSaveCheckpoint} className="event-save-button">
+              Создать
             </button>
           </div>
         )}
@@ -114,7 +164,9 @@ export default function SidePanel({
 
       <div className="panel-bottom">
         <button
-          className="event-button public"
+          className={`event-button public ${
+            isPlacingCheckpoint ? "active" : ""
+          }`}
           onClick={() => setIsPlacingCheckpoint(true)}
           aria-label="Создать публичный эвент"
         >

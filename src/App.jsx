@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+const publicIconCursor = new URL("src/img/1.jpg", import.meta.url).href;
 
+import React, { useState, useEffect } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -9,12 +10,8 @@ import {
   ZoomControl,
 } from "react-leaflet";
 import L from "leaflet";
-
 import { signInWithPopup, provider, auth, signOut } from "./firebase";
 import SidePanel from "./components/SidePanel";
-
-import "./index.css";
-import "leaflet/dist/leaflet.css";
 
 const position = [51.505, -0.09];
 
@@ -23,6 +20,10 @@ const customCheckpointIcon = L.divIcon({
     width: 60px;
     height: 60px;
     background-color: #01333F;
+    background-image: url('src/img/1.jpg');
+    background-size: 60% 60%;
+    background-position: center;
+    background-repeat: no-repeat;
     border-radius: 50% 50% 50% 0;
     transform: rotate(-45deg);
     border: 2px solid #00BFFF;
@@ -35,6 +36,7 @@ const customCheckpointIcon = L.divIcon({
 
 function App() {
   const [user, setUser] = useState(null);
+
   const [infoText, setInfoText] = useState(
     "Создай на карте свой первый Эвент-Поинт и его увидят другие пользователи!"
   );
@@ -44,6 +46,7 @@ function App() {
   const [tempCheckpoint, setTempCheckpoint] = useState(null);
   const [currentInfo, setCurrentInfo] = useState(null);
   const [inputText, setInputText] = useState("");
+  const [eventLifetime, setEventLifetime] = useState(3 * 60 * 60 * 1000);
 
   useEffect(() => {
     const handleEsc = (e) => {
@@ -55,6 +58,16 @@ function App() {
 
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCheckpoints((prev) =>
+        prev.filter((point) => !point.expiresAt || point.expiresAt > Date.now())
+      );
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleLogin = async () => {
@@ -75,19 +88,13 @@ function App() {
     useMapEvents({
       click(e) {
         if (isPlacingCheckpoint) {
-          const confirmPlacement = window.confirm(
-            "Хотите ли вы установить свой Эвент-Пойнт?"
-          );
+          setTempCheckpoint({
+            lat: e.latlng.lat,
+            lng: e.latlng.lng,
+          });
 
-          if (confirmPlacement) {
-            setTempCheckpoint({
-              lat: e.latlng.lat,
-              lng: e.latlng.lng,
-            });
-
-            setIsPlacingCheckpoint(false);
-            setInfoText("");
-          }
+          setIsPlacingCheckpoint(false);
+          setInfoText("");
         }
       },
     });
@@ -102,15 +109,17 @@ function App() {
       id: Date.now(),
       position: [tempCheckpoint.lat, tempCheckpoint.lng],
       title: inputText,
+      createdAt: Date.now(),
+      expiresAt: Date.now() + eventLifetime,
+      lifetime: eventLifetime,
     };
 
-    setCheckpoints([...checkpoints, newPoint]);
+    setCheckpoints((prev) => [...prev, newPoint]);
     setTempCheckpoint(null);
     setInputText("");
     setCurrentInfo(newPoint.title);
   };
 
-  // LOGIN SCREEN
   if (!user) {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-100">
@@ -125,21 +134,21 @@ function App() {
   }
 
   return (
-    <div className="h-screen w-screen relative overflow-hidden">
-
-      {/* SIDE PANEL */}
+    <div className="h-screen w-screen relative">
       <SidePanel
         user={user}
         onLogout={handleLogout}
         infoText={currentInfo || infoText}
         setIsPlacingCheckpoint={setIsPlacingCheckpoint}
+        isPlacingCheckpoint={isPlacingCheckpoint}
         tempCheckpoint={tempCheckpoint}
         inputText={inputText}
         setInputText={setInputText}
         handleSaveCheckpoint={handleSaveCheckpoint}
+        eventLifetime={eventLifetime}
+        setEventLifetime={setEventLifetime}
       />
 
-      {/* MAP */}
       <MapContainer
         center={position}
         zoom={13}
@@ -148,9 +157,14 @@ function App() {
           isPlacingCheckpoint ? "cursor-checkpoint" : ""
         }`}
         zoomControl={false}
+        style={{
+          cursor: isPlacingCheckpoint
+            ? `url(${publicIconCursor}) 15 15, auto`
+            : "auto",
+        }}
       >
         <TileLayer
-          attribution="&copy; OpenStreetMap contributors"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
@@ -160,34 +174,22 @@ function App() {
           <Marker
             key={event.id}
             position={event.position}
+            eventHandlers={{ click: () => setCurrentInfo(event.title) }}
             icon={customCheckpointIcon}
-            eventHandlers={{
-              click: () => setCurrentInfo(event.title),
-            }}
           >
-            <Popup>{event.title}</Popup>
+            <Popup>
+              <div>
+                <strong>{event.title}</strong>
+                <br />
+                Живёт до:{" "}
+                {new Date(event.expiresAt).toLocaleString("ru-RU")}
+              </div>
+            </Popup>
           </Marker>
         ))}
 
         <ZoomControl position="topright" />
       </MapContainer>
-
-      {/* EVENT INPUT (фикс внизу) */}
-      {tempCheckpoint && (
-        <div className="event-input-modal">
-
-          <textarea
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            placeholder="Введите описание события..."
-          />
-
-          <button onClick={handleSaveCheckpoint}>
-            Сохранить Эвент-Поинт
-          </button>
-
-        </div>
-      )}
     </div>
   );
 }
