@@ -10,7 +10,16 @@ import {
   ZoomControl,
 } from "react-leaflet";
 import L from "leaflet";
-import { signInWithPopup, provider, auth, signOut, db } from "./firebase";
+
+import {
+  signInWithPopup,
+  provider,
+  auth,
+  signOut,
+  onAuthStateChanged,
+  db,
+} from "./firebase";
+
 import {
   collection,
   addDoc,
@@ -19,6 +28,7 @@ import {
   doc,
   Timestamp,
 } from "firebase/firestore";
+
 import SidePanel from "./components/SidePanel";
 
 const position = [51.505, -0.09];
@@ -55,6 +65,14 @@ function App() {
   const [currentInfo, setCurrentInfo] = useState(null);
   const [inputText, setInputText] = useState("");
   const [eventLifetime, setEventLifetime] = useState(3 * 60 * 60 * 1000);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "events"), (snapshot) => {
@@ -113,16 +131,19 @@ function App() {
 
   const handleLogin = async () => {
     try {
-      const result = await signInWithPopup(auth, provider);
-      setUser(result.user);
+      await signInWithPopup(auth, provider);
     } catch (error) {
       console.error("Ошибка входа:", error);
     }
   };
 
-  const handleLogout = () => {
-    signOut(auth);
-    setUser(null);
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setUser(null);
+    } catch (error) {
+      console.error("Ошибка выхода:", error);
+    }
   };
 
   function MapClickHandler() {
@@ -247,5 +268,4 @@ function App() {
     </div>
   );
 }
-
 export default App;
