@@ -1,5 +1,7 @@
 const publicIconCursor = new URL("src/img/1.jpg", import.meta.url).href;
 
+const publicIconCursor = new URL("src/img/1.jpg", import.meta.url).href;
+
 import React, { useState, useEffect } from "react";
 import {
   MapContainer,
@@ -54,6 +56,25 @@ const customCheckpointIcon = L.divIcon({
   iconAnchor: [30, 60],
 });
 
+const ownCheckpointIcon = L.divIcon({
+  html: `<div style="
+    width: 64px;
+    height: 64px;
+    background-color: #2D1044;
+    background-image: url('src/img/1.jpg');
+    background-size: 60% 60%;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    border: 3px solid #FF69B4;
+    box-shadow: 0 0 16px #FF69B4;
+  "></div>`,
+  className: "",
+  iconSize: [64, 64],
+  iconAnchor: [32, 64],
+});
+
 function App() {
   const [user, setUser] = useState(null);
 
@@ -87,11 +108,11 @@ function App() {
       const now = Date.now();
 
       const loadedEvents = snapshot.docs
-        .map((document) => {
-          const data = document.data();
+        .map((documentItem) => {
+          const data = documentItem.data();
 
           return {
-            id: document.id,
+            id: documentItem.id,
             title: data.title,
             position: data.position,
             type: data.type || "public",
@@ -107,8 +128,8 @@ function App() {
 
       setCheckpoints(loadedEvents);
 
-      snapshot.docs.forEach((document) => {
-        const data = document.data();
+      snapshot.docs.forEach((documentItem) => {
+        const data = documentItem.data();
         const expiresAt = data.expiresAt?.toMillis?.();
 
         if (
@@ -117,7 +138,7 @@ function App() {
           auth.currentUser &&
           data.userId === auth.currentUser.uid
         ) {
-          deleteDoc(doc(db, "events", document.id));
+          deleteDoc(doc(db, "events", documentItem.id));
         }
       });
     });
@@ -157,6 +178,22 @@ function App() {
       setUser(null);
     } catch (error) {
       console.error("Ошибка выхода:", error);
+    }
+  };
+
+  const handleDeleteCheckpoint = async (eventId) => {
+    if (!user || !eventId) return;
+
+    const confirmDelete = window.confirm("Удалить этот Эвент-Пойнт?");
+
+    if (!confirmDelete) return;
+
+    try {
+      await deleteDoc(doc(db, "events", eventId));
+
+      setCurrentInfo(null);
+    } catch (error) {
+      console.error("Ошибка удаления события:", error);
     }
   };
 
@@ -255,27 +292,53 @@ function App() {
 
         <MapClickHandler />
 
-        {checkpoints.map((event) => (
-          <Marker
-            key={event.id}
-            position={event.position}
-            eventHandlers={{ click: () => setCurrentInfo(event.title) }}
-            icon={customCheckpointIcon}
-          >
-            <Popup>
-              <div>
-                <strong>{event.title}</strong>
-                <br />
-                Автор: {event.userName || "Unknown user"}
-                <br />
-                Живёт до:{" "}
-                {event.expiresAt
-                  ? new Date(event.expiresAt).toLocaleString("ru-RU")
-                  : "неизвестно"}
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+        {checkpoints.map((event) => {
+          const isOwnEvent = event.userId === user.uid;
+
+          return (
+            <Marker
+              key={event.id}
+              position={event.position}
+              eventHandlers={{ click: () => setCurrentInfo(event.title) }}
+              icon={isOwnEvent ? ownCheckpointIcon : customCheckpointIcon}
+            >
+              <Popup>
+                <div>
+                  <strong>{event.title}</strong>
+                  <br />
+
+                  Автор: {isOwnEvent ? "Вы" : event.userName || "Unknown user"}
+                  <br />
+
+                  Живёт до:{" "}
+                  {event.expiresAt
+                    ? new Date(event.expiresAt).toLocaleString("ru-RU")
+                    : "неизвестно"}
+
+                  {isOwnEvent && (
+                    <>
+                      <br />
+                      <button
+                        onClick={() => handleDeleteCheckpoint(event.id)}
+                        style={{
+                          marginTop: "8px",
+                          padding: "6px 10px",
+                          borderRadius: "8px",
+                          border: "none",
+                          background: "#ff4f7b",
+                          color: "white",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Удалить
+                      </button>
+                    </>
+                  )}
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
 
         <ZoomControl position="topright" />
       </MapContainer>
