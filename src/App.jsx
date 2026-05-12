@@ -1,4 +1,4 @@
-const publicIconCursor = new URL("src/img/1.jpg", import.meta.url).href;
+
 
 const publicIconCursor = new URL("src/img/1.jpg", import.meta.url).href;
 
