@@ -137,13 +137,19 @@ function App() {
     return () => window.removeEventListener("keydown", handleEsc);
   }, []);
 
-   const handleLogin = async () => {
-  try {
-    await signInWithRedirect(auth, provider);
-  } catch (error) {
-    console.error("Ошибка входа:", error);
-  }
-};
+  const handleLogin = async () => {
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (popupError) {
+      console.error("Popup login failed, trying redirect:", popupError);
+
+      try {
+        await signInWithRedirect(auth, provider);
+      } catch (redirectError) {
+        console.error("Redirect login failed:", redirectError);
+      }
+    }
+  };
 
   const handleLogout = async () => {
     try {
