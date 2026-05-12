@@ -671,3 +671,52 @@
     height: 72px;
   }
 }
+
+/* SELECTED EVENT */
+.side-panel.selected-event-mode {
+  height: 355px;
+}
+
+.side-panel.selected-event-mode .panel-info {
+  height: 145px;
+  max-height: 145px;
+}
+
+.selected-event-info {
+  height: 100%;
+}
+
+.delete-event-button {
+  margin-top: 10px;
+  padding: 8px 14px;
+
+  border-radius: 999px;
+  border: none;
+
+  background: #ff4f7b;
+  color: white;
+
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+
+  box-shadow: 0 0 14px rgba(255, 79, 123, 0.55);
+}
+
+.foreign-event-label {
+  margin-top: 10px;
+
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 12px;
+}
+
+@media (max-width: 768px) {
+  .side-panel.selected-event-mode {
+    height: 360px;
+  }
+
+  .side-panel.selected-event-mode .panel-info {
+    height: 150px;
+    max-height: 150px;
+  }
+}

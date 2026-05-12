@@ -5,6 +5,9 @@ export default function SidePanel({
   user,
   onLogout,
   infoText,
+  selectedEvent,
+  currentUserId,
+  onDeleteEvent,
   setIsPlacingCheckpoint,
   isPlacingCheckpoint,
   tempCheckpoint,
@@ -33,11 +36,14 @@ export default function SidePanel({
     { label: "3 дня", value: 3 * 24 * 60 * 60 * 1000 }
   ];
 
+  const selectedEventIsOwn =
+    selectedEvent && String(selectedEvent.userId) === String(currentUserId);
+
   return (
     <div
       className={`side-panel ${collapsed ? "collapsed" : ""} ${
         isPlacingCheckpoint ? "placing-mode" : ""
-      }`}
+      } ${selectedEvent ? "selected-event-mode" : ""}`}
     >
       <div className="panel-top">
         <div className="panel-profile">
@@ -108,7 +114,36 @@ export default function SidePanel({
       )}
 
       <div className={`panel-info ${tempCheckpoint ? "event-edit-mode" : ""}`}>
-        {!tempCheckpoint && (
+        {!tempCheckpoint && selectedEvent && (
+          <div className="selected-event-info">
+            <div className="info-title">{selectedEvent.title}</div>
+
+            <div className="info-description">
+              Автор: {selectedEventIsOwn ? "Вы" : selectedEvent.userName}
+              <br />
+              Живёт до:{" "}
+              {selectedEvent.expiresAt
+                ? new Date(selectedEvent.expiresAt).toLocaleString("ru-RU")
+                : "неизвестно"}
+            </div>
+
+            {selectedEventIsOwn ? (
+              <button
+                type="button"
+                className="delete-event-button"
+                onClick={() => onDeleteEvent(selectedEvent.id)}
+              >
+                Удалить Эвент-Пойнт
+              </button>
+            ) : (
+              <div className="foreign-event-label">
+                Чужой эвент — удалить нельзя
+              </div>
+            )}
+          </div>
+        )}
+
+        {!tempCheckpoint && !selectedEvent && (
           <div className="info-text">
             <div className="info-title">
               {isPlacingCheckpoint
@@ -167,7 +202,9 @@ export default function SidePanel({
           className={`event-button public ${
             isPlacingCheckpoint ? "active" : ""
           }`}
-          onClick={() => setIsPlacingCheckpoint(true)}
+          onClick={() => {
+            setIsPlacingCheckpoint(true);
+          }}
           aria-label="Создать публичный эвент"
         >
           <span>📍</span>

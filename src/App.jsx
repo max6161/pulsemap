@@ -58,21 +58,39 @@ const customCheckpointIcon = L.divIcon({
 
 const ownCheckpointIcon = L.divIcon({
   html: `<div style="
-    width: 64px;
-    height: 64px;
-    background-color: #2D1044;
+    width: 66px;
+    height: 66px;
+    background-color: #3b124e;
     background-image: url('src/img/1.jpg');
-    background-size: 60% 60%;
+    background-size: 58% 58%;
     background-position: center;
     background-repeat: no-repeat;
     border-radius: 50% 50% 50% 0;
     transform: rotate(-45deg);
-    border: 3px solid #FF69B4;
-    box-shadow: 0 0 16px #FF69B4;
-  "></div>`,
+    border: 4px solid #FF69B4;
+    box-shadow: 0 0 22px #FF69B4, 0 0 36px rgba(255,105,180,0.55);
+  ">
+    <div style="
+      position:absolute;
+      right:-7px;
+      top:-7px;
+      width:22px;
+      height:22px;
+      border-radius:50%;
+      background:#FF69B4;
+      color:white;
+      font-size:11px;
+      font-weight:bold;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      transform: rotate(45deg);
+      box-shadow:0 0 10px #FF69B4;
+    ">Вы</div>
+  </div>`,
   className: "",
-  iconSize: [64, 64],
-  iconAnchor: [32, 64],
+  iconSize: [66, 66],
+  iconAnchor: [33, 66],
 });
 
 function App() {
@@ -83,9 +101,10 @@ function App() {
   );
 
   const [checkpoints, setCheckpoints] = useState([]);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+
   const [isPlacingCheckpoint, setIsPlacingCheckpoint] = useState(false);
   const [tempCheckpoint, setTempCheckpoint] = useState(null);
-  const [currentInfo, setCurrentInfo] = useState(null);
   const [inputText, setInputText] = useState("");
   const [eventLifetime, setEventLifetime] = useState(3 * 60 * 60 * 1000);
 
@@ -116,8 +135,8 @@ function App() {
             title: data.title,
             position: data.position,
             type: data.type || "public",
-            userId: data.userId,
-            userName: data.userName,
+            userId: data.userId || null,
+            userName: data.userName || "Unknown user",
             createdAt: data.createdAt?.toMillis?.() || null,
             expiresAt: data.expiresAt?.toMillis?.() || null,
           };
@@ -128,18 +147,14 @@ function App() {
 
       setCheckpoints(loadedEvents);
 
-      snapshot.docs.forEach((documentItem) => {
-        const data = documentItem.data();
-        const expiresAt = data.expiresAt?.toMillis?.();
+      setSelectedEvent((prevSelected) => {
+        if (!prevSelected) return null;
 
-        if (
-          expiresAt &&
-          expiresAt <= now &&
-          auth.currentUser &&
-          data.userId === auth.currentUser.uid
-        ) {
-          deleteDoc(doc(db, "events", documentItem.id));
-        }
+        const updatedSelected = loadedEvents.find(
+          (event) => event.id === prevSelected.id
+        );
+
+        return updatedSelected || null;
       });
     });
 
@@ -181,22 +196,6 @@ function App() {
     }
   };
 
-  const handleDeleteCheckpoint = async (eventId) => {
-    if (!user || !eventId) return;
-
-    const confirmDelete = window.confirm("Удалить этот Эвент-Пойнт?");
-
-    if (!confirmDelete) return;
-
-    try {
-      await deleteDoc(doc(db, "events", eventId));
-
-      setCurrentInfo(null);
-    } catch (error) {
-      console.error("Ошибка удаления события:", error);
-    }
-  };
-
   function MapClickHandler() {
     useMapEvents({
       click(e) {
@@ -206,6 +205,7 @@ function App() {
             lng: e.latlng.lng,
           });
 
+          setSelectedEvent(null);
           setIsPlacingCheckpoint(false);
           setInfoText("");
         }
@@ -236,9 +236,39 @@ function App() {
 
       setTempCheckpoint(null);
       setInputText("");
-      setCurrentInfo(newPoint.title);
+      setInfoText(newPoint.title);
     } catch (error) {
       console.error("Ошибка сохранения события в Firestore:", error);
+    }
+  };
+
+  const handleDeleteCheckpoint = async (eventId) => {
+    if (!user || !eventId) return;
+
+    const eventToDelete = checkpoints.find((event) => event.id === eventId);
+
+    if (!eventToDelete) {
+      alert("Эвент не найден.");
+      return;
+    }
+
+    if (String(eventToDelete.userId) !== String(user.uid)) {
+      alert("Можно удалить только свой Эвент-Пойнт.");
+      return;
+    }
+
+    const confirmDelete = window.confirm("Удалить этот Эвент-Пойнт?");
+
+    if (!confirmDelete) return;
+
+    try {
+      await deleteDoc(doc(db, "events", eventId));
+
+      setSelectedEvent(null);
+      setInfoText("Эвент-Пойнт удалён.");
+    } catch (error) {
+      console.error("Ошибка удаления события:", error);
+      alert("Не получилось удалить Эвент-Пойнт.");
     }
   };
 
@@ -260,7 +290,10 @@ function App() {
       <SidePanel
         user={user}
         onLogout={handleLogout}
-        infoText={currentInfo || infoText}
+        infoText={infoText}
+        selectedEvent={selectedEvent}
+        currentUserId={user.uid}
+        onDeleteEvent={handleDeleteCheckpoint}
         setIsPlacingCheckpoint={setIsPlacingCheckpoint}
         isPlacingCheckpoint={isPlacingCheckpoint}
         tempCheckpoint={tempCheckpoint}
@@ -293,23 +326,26 @@ function App() {
         <MapClickHandler />
 
         {checkpoints.map((event) => {
-          const isOwnEvent = event.userId === user.uid;
+          const isOwnEvent = String(event.userId) === String(user.uid);
 
           return (
             <Marker
               key={event.id}
               position={event.position}
-              eventHandlers={{ click: () => setCurrentInfo(event.title) }}
               icon={isOwnEvent ? ownCheckpointIcon : customCheckpointIcon}
+              eventHandlers={{
+                click: () => {
+                  setSelectedEvent(event);
+                  setInfoText(event.title);
+                },
+              }}
             >
               <Popup>
                 <div>
                   <strong>{event.title}</strong>
                   <br />
-
-                  Автор: {isOwnEvent ? "Вы" : event.userName || "Unknown user"}
+                  Автор: {isOwnEvent ? "Вы" : event.userName}
                   <br />
-
                   Живёт до:{" "}
                   {event.expiresAt
                     ? new Date(event.expiresAt).toLocaleString("ru-RU")
@@ -319,14 +355,16 @@ function App() {
                     <>
                       <br />
                       <button
+                        type="button"
                         onClick={() => handleDeleteCheckpoint(event.id)}
                         style={{
                           marginTop: "8px",
-                          padding: "6px 10px",
-                          borderRadius: "8px",
+                          padding: "7px 12px",
+                          borderRadius: "999px",
                           border: "none",
                           background: "#ff4f7b",
                           color: "white",
+                          fontSize: "12px",
                           cursor: "pointer",
                         }}
                       >
@@ -346,4 +384,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;
