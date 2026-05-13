@@ -196,7 +196,7 @@ export default function SidePanel({
             <textarea
               value={inputText}
               onChange={handleDescriptionChange}
-              placeholder="Опиши свой Эвент-Пойнт..."
+              placeholder="Опиши свой Эвент-Пойнт и выбери подходящую категорию ниже..."
               className="event-description-input"
               autoFocus
             />

@@ -221,12 +221,7 @@ function App() {
     if (!selectedEvent && !tempCheckpoint && !isPlacingCheckpoint) {
       setInfoText(defaultInfoText);
     }
-  }, [
-    selectedEvent,
-    tempCheckpoint,
-    isPlacingCheckpoint,
-    defaultInfoText,
-  ]);
+  }, [selectedEvent, tempCheckpoint, isPlacingCheckpoint, defaultInfoText]);
 
   useEffect(() => {
     const handleEsc = (e) => {
@@ -518,7 +513,7 @@ function App() {
           );
         })}
 
-        <ZoomControl position="topright" />
+        <ZoomControl position="bottomleft" />
       </MapContainer>
     </div>
   );
