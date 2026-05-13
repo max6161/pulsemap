@@ -240,15 +240,11 @@ export default function SidePanel({
                 ))}
               </div>
             </div>
-
-            <button onClick={handleSaveCheckpoint} className="event-save-button">
-              Создать
-            </button>
           </div>
         )}
       </div>
 
-      <div className="panel-bottom">
+      <div className={`panel-bottom ${tempCheckpoint ? "edit-bottom" : ""}`}>
         <button
           className={`event-button public ${
             isPlacingCheckpoint ? "active" : ""
@@ -258,6 +254,16 @@ export default function SidePanel({
         >
           <span>📍</span>
         </button>
+
+        {tempCheckpoint && (
+          <button
+            type="button"
+            className="bottom-save-button"
+            onClick={handleSaveCheckpoint}
+          >
+            Создать
+          </button>
+        )}
 
         <button
           className="panel-handle"
