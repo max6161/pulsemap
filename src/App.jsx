@@ -1,6 +1,7 @@
 const publicIconCursor = new URL("src/img/1.jpg", import.meta.url).href;
 
 import React, { useState, useEffect } from "react";
+
 import {
   MapContainer,
   TileLayer,
@@ -9,6 +10,7 @@ import {
   useMapEvents,
   ZoomControl,
 } from "react-leaflet";
+
 import L from "leaflet";
 
 import {
@@ -37,6 +39,7 @@ import {
   arrayRemove,
 } from "firebase/firestore";
 
+import { syncUserProfile } from "./services/usersService";
 import SidePanel from "./components/SidePanel";
 
 const position = [51.505, -0.09];
@@ -48,6 +51,7 @@ const PLAN_LIMITS = {
     maxActiveEvents: 3,
     createCooldownMs: 30 * 1000,
   },
+
   premium: {
     maxActiveEvents: 20,
     createCooldownMs: 5 * 1000,
@@ -60,16 +64,19 @@ const CATEGORY_META = {
     gradient: "linear-gradient(135deg, #7b2cff, #ff4fd8)",
     glow: "rgba(255, 79, 216, 0.75)",
   },
+
   games: {
     label: "🎲 Игры",
     gradient: "linear-gradient(135deg, #0066ff, #00d9ff)",
     glow: "rgba(0, 217, 255, 0.75)",
   },
+
   chill: {
     label: "☕ Чилл",
     gradient: "linear-gradient(135deg, #00c853, #00ffd5)",
     glow: "rgba(0, 255, 213, 0.75)",
   },
+
   dating: {
     label: "❤️ Знакомства",
     gradient: "linear-gradient(135deg, #ff1744, #ff8ac7)",
@@ -79,36 +86,41 @@ const CATEGORY_META = {
 
 function createCheckpointIcon(category = "chill", isOwn = false) {
   const meta = CATEGORY_META[category] || CATEGORY_META.chill;
+
   const size = isOwn ? 66 : 60;
   const borderSize = isOwn ? 4 : 3;
+
   const background = isOwn ? "#3b124e" : "#01333F";
 
   return L.divIcon({
-    html: `<div style="
-      width: ${size}px;
-      height: ${size}px;
-      padding: ${borderSize}px;
-      box-sizing: border-box;
-      background: ${meta.gradient};
-      border-radius: 50% 50% 50% 0;
-      transform: rotate(-45deg);
-      box-shadow: 0 0 ${isOwn ? 24 : 16}px ${meta.glow};
-      position: relative;
-    ">
+    html: `
       <div style="
-        width: 100%;
-        height: 100%;
-        background-color: ${background};
-        background-image: url('src/img/1.jpg');
-        background-size: 60% 60%;
-        background-position: center;
-        background-repeat: no-repeat;
-        border-radius: 50% 50% 50% 0;
-      "></div>
+        width:${size}px;
+        height:${size}px;
+        padding:${borderSize}px;
+        box-sizing:border-box;
+        background:${meta.gradient};
+        border-radius:50% 50% 50% 0;
+        transform:rotate(-45deg);
+        box-shadow:0 0 ${isOwn ? 24 : 16}px ${meta.glow};
+        position:relative;
+      ">
 
-      ${
-        isOwn
-          ? `<div style="
+        <div style="
+          width:100%;
+          height:100%;
+          background-color:${background};
+          background-image:url('src/img/1.jpg');
+          background-size:60% 60%;
+          background-position:center;
+          background-repeat:no-repeat;
+          border-radius:50% 50% 50% 0;
+        "></div>
+
+        ${
+          isOwn
+            ? `
+            <div style="
               position:absolute;
               right:-7px;
               top:-7px;
@@ -122,12 +134,17 @@ function createCheckpointIcon(category = "chill", isOwn = false) {
               display:flex;
               align-items:center;
               justify-content:center;
-              transform: rotate(45deg);
+              transform:rotate(45deg);
               box-shadow:0 0 10px #FF69B4;
-            ">Вы</div>`
-          : ""
-      }
-    </div>`,
+            ">
+              Вы
+            </div>
+          `
+            : ""
+        }
+      </div>
+    `,
+
     className: "",
     iconSize: [size, size],
     iconAnchor: [size / 2, size],
@@ -150,24 +167,33 @@ function App() {
   const [isPlacingCheckpoint, setIsPlacingCheckpoint] = useState(false);
   const [tempCheckpoint, setTempCheckpoint] = useState(null);
   const [inputText, setInputText] = useState("");
-  const [eventLifetime, setEventLifetime] = useState(3 * 60 * 60 * 1000);
+
+  const [eventLifetime, setEventLifetime] = useState(
+    3 * 60 * 60 * 1000
+  );
 
   const currentPlanLimits = PLAN_LIMITS[USER_PLAN];
 
   const ownActiveEventsCount = user
-    ? checkpoints.filter((event) => String(event.userId) === String(user.uid)).length
+    ? checkpoints.filter(
+        (event) => String(event.userId) === String(user.uid)
+      ).length
     : 0;
 
   const hasReachedEventLimit =
     ownActiveEventsCount >= currentPlanLimits.maxActiveEvents;
 
   const defaultInfoText = hasReachedEventLimit
-    ? `Лимит бесплатного плана: ${currentPlanLimits.maxActiveEvents} активных Эвент-Пойнта. Удали один из своих эвентов или дождись окончания таймера. Позже здесь появится подписка для большего количества эвентов.`
+    ? `Лимит бесплатного плана: ${currentPlanLimits.maxActiveEvents} активных Эвент-Пойнта.`
     : "Создай на карте свой первый Эвент-Пойнт и его увидят другие пользователи!";
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
+
+      if (currentUser) {
+        await syncUserProfile(currentUser);
+      }
     });
 
     return () => unsubscribe();
@@ -242,6 +268,7 @@ function App() {
     };
 
     window.addEventListener("keydown", handleEsc);
+
     return () => window.removeEventListener("keydown", handleEsc);
   }, []);
 
@@ -262,6 +289,7 @@ function App() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
+
       setUser(null);
     } catch (error) {
       console.error("Ошибка выхода:", error);
@@ -280,6 +308,7 @@ function App() {
           setSelectedEvent(null);
           setIsPlacingCheckpoint(false);
           setInfoText("");
+
           return;
         }
 
@@ -300,6 +329,7 @@ function App() {
 
     if (trimmedText.length < 5) {
       alert("Описание эвента должно быть минимум 5 символов.");
+
       return;
     }
 
@@ -317,18 +347,21 @@ function App() {
         .map((docItem) => docItem.data())
         .filter((event) => {
           const expiresAt = event.expiresAt?.toMillis?.();
+
           return expiresAt && expiresAt > now;
         });
 
       if (userActiveEvents.length >= currentPlanLimits.maxActiveEvents) {
         alert(
-          `На бесплатном плане можно создать максимум ${currentPlanLimits.maxActiveEvents} активных Эвент-Пойнта. Удали старый эвент или дождись окончания таймера.`
+          `На бесплатном плане можно создать максимум ${currentPlanLimits.maxActiveEvents} активных Эвент-Пойнта.`
         );
+
         return;
       }
 
       const lastUserCreatedAt = userActiveEvents.reduce((latest, event) => {
         const createdAt = event.createdAt?.toMillis?.() || 0;
+
         return Math.max(latest, createdAt);
       }, 0);
 
@@ -336,11 +369,8 @@ function App() {
         currentPlanLimits.createCooldownMs - (now - lastUserCreatedAt);
 
       if (cooldownLeft > 0) {
-        alert(
-          `Подожди ещё ${Math.ceil(
-            cooldownLeft / 1000
-          )} сек. перед созданием нового эвента.`
-        );
+        alert(`Подожди ещё ${Math.ceil(cooldownLeft / 1000)} сек.`);
+
         return;
       }
 
@@ -368,6 +398,7 @@ function App() {
       setInfoText(newPoint.title);
     } catch (error) {
       console.error("Ошибка создания Эвент-Пойнта:", error);
+
       alert("Не получилось создать Эвент-Пойнт.");
     }
   };
@@ -379,11 +410,13 @@ function App() {
 
     if (!eventToDelete) {
       alert("Эвент не найден.");
+
       return;
     }
 
     if (String(eventToDelete.userId) !== String(user.uid)) {
       alert("Можно удалить только свой Эвент-Пойнт.");
+
       return;
     }
 
@@ -398,6 +431,7 @@ function App() {
       setInfoText("Эвент-Пойнт удалён.");
     } catch (error) {
       console.error("Ошибка удаления события:", error);
+
       alert("Не получилось удалить Эвент-Пойнт.");
     }
   };
@@ -409,11 +443,13 @@ function App() {
 
     if (!eventToUpdate) {
       alert("Эвент не найден.");
+
       return;
     }
 
     if (String(eventToUpdate.userId) === String(user.uid)) {
       alert("Вы автор этого эвента.");
+
       return;
     }
 
@@ -428,7 +464,8 @@ function App() {
           : arrayUnion(user.uid),
       });
     } catch (error) {
-      console.error("Ошибка участия в эвенте:", error);
+      console.error("Ошибка участия:", error);
+
       alert("Не получилось обновить участие.");
     }
   };
@@ -436,7 +473,9 @@ function App() {
   const filteredCheckpoints =
     activeFilter === "all"
       ? checkpoints
-      : checkpoints.filter((event) => (event.category || "chill") === activeFilter);
+      : checkpoints.filter(
+          (event) => (event.category || "chill") === activeFilter
+        );
 
   if (!user) {
     return (
@@ -491,7 +530,7 @@ function App() {
         }}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
