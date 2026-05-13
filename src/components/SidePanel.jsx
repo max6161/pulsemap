@@ -15,10 +15,15 @@ export default function SidePanel({
   setInputText,
   handleSaveCheckpoint,
   eventLifetime,
-  setEventLifetime
+  setEventLifetime,
+  activeFilter,
+  setActiveFilter,
+  selectedCategory,
+  setSelectedCategory,
+  categoryMeta
 }) {
   const [collapsed, setCollapsed] = useState(false);
-  const [activeFilter, setActiveFilter] = useState("all");
+  const [textareaHeight, setTextareaHeight] = useState(92);
 
   const filters = [
     { id: "all", label: "Все" },
@@ -27,6 +32,8 @@ export default function SidePanel({
     { id: "chill", label: "☕ Чилл" },
     { id: "dating", label: "❤️ Знакомства" }
   ];
+
+  const categoryOptions = filters.filter((filter) => filter.id !== "all");
 
   const lifetimeOptions = [
     { label: "1ч", value: 1 * 60 * 60 * 1000 },
@@ -39,11 +46,34 @@ export default function SidePanel({
   const selectedEventIsOwn =
     selectedEvent && String(selectedEvent.userId) === String(currentUserId);
 
+  const selectedEventCategory = selectedEvent?.category || "chill";
+  const selectedEventCategoryLabel =
+    categoryMeta?.[selectedEventCategory]?.label || "☕ Чилл";
+
+  const handleDescriptionChange = (e) => {
+    setInputText(e.target.value);
+
+    e.target.style.height = "92px";
+
+    const nextHeight = Math.min(e.target.scrollHeight, 190);
+    setTextareaHeight(Math.max(92, nextHeight));
+  };
+
+  const editExtraHeight = Math.max(0, textareaHeight - 92);
+
   return (
     <div
       className={`side-panel ${collapsed ? "collapsed" : ""} ${
         isPlacingCheckpoint ? "placing-mode" : ""
       } ${selectedEvent ? "selected-event-mode" : ""}`}
+      style={
+        tempCheckpoint
+          ? {
+              "--event-textarea-height": `${textareaHeight}px`,
+              "--event-edit-extra-height": `${editExtraHeight}px`
+            }
+          : undefined
+      }
     >
       <div className="panel-top">
         <div className="panel-profile">
@@ -119,6 +149,8 @@ export default function SidePanel({
             <div className="info-title">{selectedEvent.title}</div>
 
             <div className="info-description">
+              Категория: {selectedEventCategoryLabel}
+              <br />
               Автор: {selectedEventIsOwn ? "Вы" : selectedEvent.userName}
               <br />
               Живёт до:{" "}
@@ -163,11 +195,30 @@ export default function SidePanel({
           <div className="event-edit-content">
             <textarea
               value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
+              onChange={handleDescriptionChange}
               placeholder="Опиши свой Эвент-Пойнт..."
               className="event-description-input"
               autoFocus
             />
+
+            <div className="event-lifetime">
+              <div className="event-lifetime-title">Категория эвента</div>
+
+              <div className="event-lifetime-options">
+                {categoryOptions.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className={`lifetime-chip ${
+                      selectedCategory === option.id ? "active" : ""
+                    }`}
+                    onClick={() => setSelectedCategory(option.id)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <div className="event-lifetime">
               <div className="event-lifetime-title">
@@ -202,9 +253,7 @@ export default function SidePanel({
           className={`event-button public ${
             isPlacingCheckpoint ? "active" : ""
           }`}
-          onClick={() => {
-            setIsPlacingCheckpoint(true);
-          }}
+          onClick={() => setIsPlacingCheckpoint(true)}
           aria-label="Создать публичный эвент"
         >
           <span>📍</span>

@@ -1,5 +1,3 @@
-
-
 const publicIconCursor = new URL("src/img/1.jpg", import.meta.url).href;
 
 import React, { useState, useEffect } from "react";
@@ -53,79 +51,116 @@ const PLAN_LIMITS = {
   },
 };
 
-const customCheckpointIcon = L.divIcon({
-  html: `<div style="
-    width: 60px;
-    height: 60px;
-    background-color: #01333F;
-    background-image: url('src/img/1.jpg');
-    background-size: 60% 60%;
-    background-position: center;
-    background-repeat: no-repeat;
-    border-radius: 50% 50% 50% 0;
-    transform: rotate(-45deg);
-    border: 2px solid #00BFFF;
-    box-shadow: 0 0 10px #00BFFF;
-  "></div>`,
-  className: "",
-  iconSize: [60, 60],
-  iconAnchor: [30, 60],
-});
+const CATEGORY_META = {
+  music: {
+    label: "🎵 Музыка",
+    gradient: "linear-gradient(135deg, #7b2cff, #ff4fd8)",
+    glow: "rgba(255, 79, 216, 0.75)",
+  },
+  games: {
+    label: "🎲 Игры",
+    gradient: "linear-gradient(135deg, #0066ff, #00d9ff)",
+    glow: "rgba(0, 217, 255, 0.75)",
+  },
+  chill: {
+    label: "☕ Чилл",
+    gradient: "linear-gradient(135deg, #00c853, #00ffd5)",
+    glow: "rgba(0, 255, 213, 0.75)",
+  },
+  dating: {
+    label: "❤️ Знакомства",
+    gradient: "linear-gradient(135deg, #ff1744, #ff8ac7)",
+    glow: "rgba(255, 105, 180, 0.75)",
+  },
+};
 
-const ownCheckpointIcon = L.divIcon({
-  html: `<div style="
-    width: 66px;
-    height: 66px;
-    background-color: #3b124e;
-    background-image: url('src/img/1.jpg');
-    background-size: 58% 58%;
-    background-position: center;
-    background-repeat: no-repeat;
-    border-radius: 50% 50% 50% 0;
-    transform: rotate(-45deg);
-    border: 4px solid #FF69B4;
-    box-shadow: 0 0 22px #FF69B4, 0 0 36px rgba(255,105,180,0.55);
-  ">
-    <div style="
-      position:absolute;
-      right:-7px;
-      top:-7px;
-      width:22px;
-      height:22px;
-      border-radius:50%;
-      background:#FF69B4;
-      color:white;
-      font-size:11px;
-      font-weight:bold;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      transform: rotate(45deg);
-      box-shadow:0 0 10px #FF69B4;
-    ">Вы</div>
-  </div>`,
-  className: "",
-  iconSize: [66, 66],
-  iconAnchor: [33, 66],
-});
+function createCheckpointIcon(category = "chill", isOwn = false) {
+  const meta = CATEGORY_META[category] || CATEGORY_META.chill;
+  const size = isOwn ? 66 : 60;
+  const borderSize = isOwn ? 4 : 3;
+  const background = isOwn ? "#3b124e" : "#01333F";
+
+  return L.divIcon({
+    html: `<div style="
+      width: ${size}px;
+      height: ${size}px;
+      padding: ${borderSize}px;
+      box-sizing: border-box;
+      background: ${meta.gradient};
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      box-shadow: 0 0 ${isOwn ? 24 : 16}px ${meta.glow};
+      position: relative;
+    ">
+      <div style="
+        width: 100%;
+        height: 100%;
+        background-color: ${background};
+        background-image: url('src/img/1.jpg');
+        background-size: 60% 60%;
+        background-position: center;
+        background-repeat: no-repeat;
+        border-radius: 50% 50% 50% 0;
+      "></div>
+
+      ${
+        isOwn
+          ? `<div style="
+              position:absolute;
+              right:-7px;
+              top:-7px;
+              width:22px;
+              height:22px;
+              border-radius:50%;
+              background:#FF69B4;
+              color:white;
+              font-size:11px;
+              font-weight:bold;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              transform: rotate(45deg);
+              box-shadow:0 0 10px #FF69B4;
+            ">Вы</div>`
+          : ""
+      }
+    </div>`,
+    className: "",
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size],
+  });
+}
 
 function App() {
   const [user, setUser] = useState(null);
 
   const [infoText, setInfoText] = useState(
-    "Создай на карте свой первый Эвент-Поинт и его увидят другие пользователи!"
+    "Создай на карте свой первый Эвент-Пойнт и его увидят другие пользователи!"
   );
 
   const [checkpoints, setCheckpoints] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("chill");
+
   const [isPlacingCheckpoint, setIsPlacingCheckpoint] = useState(false);
   const [tempCheckpoint, setTempCheckpoint] = useState(null);
   const [inputText, setInputText] = useState("");
   const [eventLifetime, setEventLifetime] = useState(3 * 60 * 60 * 1000);
-  const [lastCreatedAt, setLastCreatedAt] = useState(0);
 
   const currentPlanLimits = PLAN_LIMITS[USER_PLAN];
+
+  const ownActiveEventsCount = user
+    ? checkpoints.filter((event) => String(event.userId) === String(user.uid)).length
+    : 0;
+
+  const hasReachedEventLimit =
+    ownActiveEventsCount >= currentPlanLimits.maxActiveEvents;
+
+  const defaultInfoText = hasReachedEventLimit
+    ? `Лимит бесплатного плана: ${currentPlanLimits.maxActiveEvents} активных Эвент-Пойнта. Удали один из своих эвентов или дождись окончания таймера. Позже здесь появится подписка для большего количества эвентов.`
+    : "Создай на карте свой первый Эвент-Пойнт и его увидят другие пользователи!";
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -154,6 +189,7 @@ function App() {
             title: data.title,
             position: data.position,
             type: data.type || "public",
+            category: data.category || "chill",
             userId: data.userId || null,
             userName: data.userName || "Unknown user",
             userPlan: data.userPlan || "free",
@@ -182,10 +218,23 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (!selectedEvent && !tempCheckpoint && !isPlacingCheckpoint) {
+      setInfoText(defaultInfoText);
+    }
+  }, [
+    selectedEvent,
+    tempCheckpoint,
+    isPlacingCheckpoint,
+    defaultInfoText,
+  ]);
+
+  useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === "Escape") {
         setIsPlacingCheckpoint(false);
         setTempCheckpoint(null);
+        setSelectedEvent(null);
+        setInputText("");
       }
     };
 
@@ -228,7 +277,13 @@ function App() {
           setSelectedEvent(null);
           setIsPlacingCheckpoint(false);
           setInfoText("");
+          return;
         }
+
+        setSelectedEvent(null);
+        setTempCheckpoint(null);
+        setInputText("");
+        setInfoText(defaultInfoText);
       },
     });
 
@@ -292,6 +347,7 @@ function App() {
         title: trimmedText,
         position: [tempCheckpoint.lat, tempCheckpoint.lng],
         type: "public",
+        category: selectedCategory,
         userId: user.uid,
         userName: user.displayName || "Unknown user",
         userPlan: USER_PLAN,
@@ -302,9 +358,9 @@ function App() {
 
       await addDoc(collection(db, "events"), newPoint);
 
-      setLastCreatedAt(now);
       setTempCheckpoint(null);
       setInputText("");
+      setSelectedEvent(null);
       setInfoText(newPoint.title);
     } catch (error) {
       console.error("Ошибка создания Эвент-Пойнта:", error);
@@ -342,6 +398,11 @@ function App() {
     }
   };
 
+  const filteredCheckpoints =
+    activeFilter === "all"
+      ? checkpoints
+      : checkpoints.filter((event) => (event.category || "chill") === activeFilter);
+
   if (!user) {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-100">
@@ -372,6 +433,11 @@ function App() {
         handleSaveCheckpoint={handleSaveCheckpoint}
         eventLifetime={eventLifetime}
         setEventLifetime={setEventLifetime}
+        activeFilter={activeFilter}
+        setActiveFilter={setActiveFilter}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+        categoryMeta={CATEGORY_META}
       />
 
       <MapContainer
@@ -395,14 +461,16 @@ function App() {
 
         <MapClickHandler />
 
-        {checkpoints.map((event) => {
+        {filteredCheckpoints.map((event) => {
           const isOwnEvent = String(event.userId) === String(user.uid);
+          const category = event.category || "chill";
+          const categoryLabel = CATEGORY_META[category]?.label || "☕ Чилл";
 
           return (
             <Marker
               key={event.id}
               position={event.position}
-              icon={isOwnEvent ? ownCheckpointIcon : customCheckpointIcon}
+              icon={createCheckpointIcon(category, isOwnEvent)}
               eventHandlers={{
                 click: () => {
                   setSelectedEvent(event);
@@ -413,6 +481,8 @@ function App() {
               <Popup>
                 <div>
                   <strong>{event.title}</strong>
+                  <br />
+                  Категория: {categoryLabel}
                   <br />
                   Автор: {isOwnEvent ? "Вы" : event.userName}
                   <br />
