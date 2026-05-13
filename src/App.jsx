@@ -31,11 +31,27 @@ import {
   deleteDoc,
   doc,
   Timestamp,
+  getDocs,
+  query,
+  where,
 } from "firebase/firestore";
 
 import SidePanel from "./components/SidePanel";
 
 const position = [51.505, -0.09];
+
+const USER_PLAN = "free";
+
+const PLAN_LIMITS = {
+  free: {
+    maxActiveEvents: 3,
+    createCooldownMs: 30 * 1000,
+  },
+  premium: {
+    maxActiveEvents: 20,
+    createCooldownMs: 5 * 1000,
+  },
+};
 
 const customCheckpointIcon = L.divIcon({
   html: `<div style="
@@ -107,6 +123,9 @@ function App() {
   const [tempCheckpoint, setTempCheckpoint] = useState(null);
   const [inputText, setInputText] = useState("");
   const [eventLifetime, setEventLifetime] = useState(3 * 60 * 60 * 1000);
+  const [lastCreatedAt, setLastCreatedAt] = useState(0);
+
+  const currentPlanLimits = PLAN_LIMITS[USER_PLAN];
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -137,6 +156,7 @@ function App() {
             type: data.type || "public",
             userId: data.userId || null,
             userName: data.userName || "Unknown user",
+            userPlan: data.userPlan || "free",
             createdAt: data.createdAt?.toMillis?.() || null,
             expiresAt: data.expiresAt?.toMillis?.() || null,
           };
@@ -216,29 +236,79 @@ function App() {
   }
 
   const handleSaveCheckpoint = async () => {
-    if (!tempCheckpoint || !inputText.trim() || !user) return;
+    if (!tempCheckpoint || !user) return;
 
-    const expiresAtMs = Date.now() + eventLifetime;
+    const trimmedText = inputText.trim();
 
-    const newPoint = {
-      title: inputText.trim(),
-      position: [tempCheckpoint.lat, tempCheckpoint.lng],
-      type: "public",
-      userId: user.uid,
-      userName: user.displayName || "Unknown user",
-      createdAt: Timestamp.now(),
-      expiresAt: Timestamp.fromMillis(expiresAtMs),
-      lifetime: eventLifetime,
-    };
+    if (trimmedText.length < 5) {
+      alert("Описание эвента должно быть минимум 5 символов.");
+      return;
+    }
+
+    const now = Date.now();
 
     try {
+      const userEventsQuery = query(
+        collection(db, "events"),
+        where("userId", "==", user.uid)
+      );
+
+      const userEventsSnapshot = await getDocs(userEventsQuery);
+
+      const userActiveEvents = userEventsSnapshot.docs
+        .map((docItem) => docItem.data())
+        .filter((event) => {
+          const expiresAt = event.expiresAt?.toMillis?.();
+          return expiresAt && expiresAt > now;
+        });
+
+      if (userActiveEvents.length >= currentPlanLimits.maxActiveEvents) {
+        alert(
+          `На бесплатном плане можно создать максимум ${currentPlanLimits.maxActiveEvents} активных Эвент-Пойнта. Удали старый эвент или дождись окончания таймера.`
+        );
+        return;
+      }
+
+      const lastUserCreatedAt = userActiveEvents.reduce((latest, event) => {
+        const createdAt = event.createdAt?.toMillis?.() || 0;
+        return Math.max(latest, createdAt);
+      }, 0);
+
+      const cooldownLeft =
+        currentPlanLimits.createCooldownMs - (now - lastUserCreatedAt);
+
+      if (cooldownLeft > 0) {
+        alert(
+          `Подожди ещё ${Math.ceil(
+            cooldownLeft / 1000
+          )} сек. перед созданием нового эвента.`
+        );
+        return;
+      }
+
+      const expiresAtMs = now + eventLifetime;
+
+      const newPoint = {
+        title: trimmedText,
+        position: [tempCheckpoint.lat, tempCheckpoint.lng],
+        type: "public",
+        userId: user.uid,
+        userName: user.displayName || "Unknown user",
+        userPlan: USER_PLAN,
+        createdAt: Timestamp.now(),
+        expiresAt: Timestamp.fromMillis(expiresAtMs),
+        lifetime: eventLifetime,
+      };
+
       await addDoc(collection(db, "events"), newPoint);
 
+      setLastCreatedAt(now);
       setTempCheckpoint(null);
       setInputText("");
       setInfoText(newPoint.title);
     } catch (error) {
-      console.error("Ошибка сохранения события в Firestore:", error);
+      console.error("Ошибка создания Эвент-Пойнта:", error);
+      alert("Не получилось создать Эвент-Пойнт.");
     }
   };
 
