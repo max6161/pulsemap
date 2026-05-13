@@ -32,6 +32,9 @@ import {
   getDocs,
   query,
   where,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
 } from "firebase/firestore";
 
 import SidePanel from "./components/SidePanel";
@@ -193,6 +196,11 @@ function App() {
             userId: data.userId || null,
             userName: data.userName || "Unknown user",
             userPlan: data.userPlan || "free",
+            participants: Array.isArray(data.participants)
+              ? data.participants
+              : data.userId
+              ? [data.userId]
+              : [],
             createdAt: data.createdAt?.toMillis?.() || null,
             expiresAt: data.expiresAt?.toMillis?.() || null,
           };
@@ -346,6 +354,7 @@ function App() {
         userId: user.uid,
         userName: user.displayName || "Unknown user",
         userPlan: USER_PLAN,
+        participants: [user.uid],
         createdAt: Timestamp.now(),
         expiresAt: Timestamp.fromMillis(expiresAtMs),
         lifetime: eventLifetime,
@@ -393,6 +402,37 @@ function App() {
     }
   };
 
+  const handleToggleJoinEvent = async (eventId) => {
+    if (!user || !eventId) return;
+
+    const eventToUpdate = checkpoints.find((event) => event.id === eventId);
+
+    if (!eventToUpdate) {
+      alert("Эвент не найден.");
+      return;
+    }
+
+    if (String(eventToUpdate.userId) === String(user.uid)) {
+      alert("Вы автор этого эвента.");
+      return;
+    }
+
+    const alreadyJoined = eventToUpdate.participants?.includes(user.uid);
+
+    try {
+      const eventRef = doc(db, "events", eventId);
+
+      await updateDoc(eventRef, {
+        participants: alreadyJoined
+          ? arrayRemove(user.uid)
+          : arrayUnion(user.uid),
+      });
+    } catch (error) {
+      console.error("Ошибка участия в эвенте:", error);
+      alert("Не получилось обновить участие.");
+    }
+  };
+
   const filteredCheckpoints =
     activeFilter === "all"
       ? checkpoints
@@ -420,6 +460,7 @@ function App() {
         selectedEvent={selectedEvent}
         currentUserId={user.uid}
         onDeleteEvent={handleDeleteCheckpoint}
+        onToggleJoinEvent={handleToggleJoinEvent}
         setIsPlacingCheckpoint={setIsPlacingCheckpoint}
         isPlacingCheckpoint={isPlacingCheckpoint}
         tempCheckpoint={tempCheckpoint}
@@ -460,6 +501,7 @@ function App() {
           const isOwnEvent = String(event.userId) === String(user.uid);
           const category = event.category || "chill";
           const categoryLabel = CATEGORY_META[category]?.label || "☕ Чилл";
+          const participantsCount = event.participants?.length || 0;
 
           return (
             <Marker
@@ -481,32 +523,12 @@ function App() {
                   <br />
                   Автор: {isOwnEvent ? "Вы" : event.userName}
                   <br />
+                  Идут: {participantsCount}
+                  <br />
                   Живёт до:{" "}
                   {event.expiresAt
                     ? new Date(event.expiresAt).toLocaleString("ru-RU")
                     : "неизвестно"}
-
-                  {isOwnEvent && (
-                    <>
-                      <br />
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteCheckpoint(event.id)}
-                        style={{
-                          marginTop: "8px",
-                          padding: "7px 12px",
-                          borderRadius: "999px",
-                          border: "none",
-                          background: "#ff4f7b",
-                          color: "white",
-                          fontSize: "12px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Удалить
-                      </button>
-                    </>
-                  )}
                 </div>
               </Popup>
             </Marker>

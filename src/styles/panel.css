@@ -724,3 +724,25 @@
     left: 8px;
   }
 }
+
+.join-event-button {
+  margin-top: 10px;
+  padding: 8px 14px;
+
+  border-radius: 999px;
+  border: none;
+
+  background: #00bfff;
+  color: white;
+
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+
+  box-shadow: 0 0 14px rgba(0, 191, 255, 0.55);
+}
+
+.join-event-button.joined {
+  background: #ff69b4;
+  box-shadow: 0 0 14px rgba(255, 105, 180, 0.55);
+}

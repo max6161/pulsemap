@@ -8,6 +8,7 @@ export default function SidePanel({
   selectedEvent,
   currentUserId,
   onDeleteEvent,
+  onToggleJoinEvent,
   setIsPlacingCheckpoint,
   isPlacingCheckpoint,
   tempCheckpoint,
@@ -49,6 +50,10 @@ export default function SidePanel({
   const selectedEventCategory = selectedEvent?.category || "chill";
   const selectedEventCategoryLabel =
     categoryMeta?.[selectedEventCategory]?.label || "☕ Чилл";
+
+  const selectedEventParticipants = selectedEvent?.participants || [];
+  const selectedEventParticipantsCount = selectedEventParticipants.length;
+  const currentUserJoined = selectedEventParticipants.includes(currentUserId);
 
   const handleDescriptionChange = (e) => {
     setInputText(e.target.value);
@@ -153,6 +158,8 @@ export default function SidePanel({
               <br />
               Автор: {selectedEventIsOwn ? "Вы" : selectedEvent.userName}
               <br />
+              Идут: {selectedEventParticipantsCount}
+              <br />
               Живёт до:{" "}
               {selectedEvent.expiresAt
                 ? new Date(selectedEvent.expiresAt).toLocaleString("ru-RU")
@@ -168,9 +175,15 @@ export default function SidePanel({
                 Удалить Эвент-Пойнт
               </button>
             ) : (
-              <div className="foreign-event-label">
-                Чужой эвент — удалить нельзя
-              </div>
+              <button
+                type="button"
+                className={`join-event-button ${
+                  currentUserJoined ? "joined" : ""
+                }`}
+                onClick={() => onToggleJoinEvent(selectedEvent.id)}
+              >
+                {currentUserJoined ? "Не иду" : "Я иду"}
+              </button>
             )}
           </div>
         )}
