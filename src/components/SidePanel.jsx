@@ -7,8 +7,6 @@ export default function SidePanel({
   infoText,
   selectedEvent,
   currentUserId,
-  onDeleteEvent,
-  onToggleJoinEvent,
   setIsPlacingCheckpoint,
   isPlacingCheckpoint,
   tempCheckpoint,
@@ -44,20 +42,14 @@ export default function SidePanel({
     { label: "3 дня", value: 3 * 24 * 60 * 60 * 1000 }
   ];
 
+  const selectedCategoryLabel =
+    categoryMeta?.[selectedEvent?.category || "chill"]?.label || "☕ Чилл";
+
   const selectedEventIsOwn =
     selectedEvent && String(selectedEvent.userId) === String(currentUserId);
 
-  const selectedEventCategory = selectedEvent?.category || "chill";
-  const selectedEventCategoryLabel =
-    categoryMeta?.[selectedEventCategory]?.label || "☕ Чилл";
-
-  const selectedEventParticipants = selectedEvent?.participants || [];
-  const selectedEventParticipantsCount = selectedEventParticipants.length;
-  const currentUserJoined = selectedEventParticipants.includes(currentUserId);
-
   const handleDescriptionChange = (e) => {
     setInputText(e.target.value);
-
     e.target.style.height = "92px";
 
     const nextHeight = Math.min(e.target.scrollHeight, 190);
@@ -154,37 +146,14 @@ export default function SidePanel({
             <div className="info-title">{selectedEvent.title}</div>
 
             <div className="info-description">
-              Категория: {selectedEventCategoryLabel}
+              Категория: {selectedCategoryLabel}
               <br />
               Автор: {selectedEventIsOwn ? "Вы" : selectedEvent.userName}
               <br />
-              Идут: {selectedEventParticipantsCount}
+              Идут: {selectedEvent.participants?.length || 0}
               <br />
-              Живёт до:{" "}
-              {selectedEvent.expiresAt
-                ? new Date(selectedEvent.expiresAt).toLocaleString("ru-RU")
-                : "неизвестно"}
+              Открой карточку над меткой для подробностей и чата.
             </div>
-
-            {selectedEventIsOwn ? (
-              <button
-                type="button"
-                className="delete-event-button"
-                onClick={() => onDeleteEvent(selectedEvent.id)}
-              >
-                Удалить Эвент-Пойнт
-              </button>
-            ) : (
-              <button
-                type="button"
-                className={`join-event-button ${
-                  currentUserJoined ? "joined" : ""
-                }`}
-                onClick={() => onToggleJoinEvent(selectedEvent.id)}
-              >
-                {currentUserJoined ? "Не иду" : "Я иду"}
-              </button>
-            )}
           </div>
         )}
 

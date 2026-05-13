@@ -5,6 +5,13 @@
     }
   },
   "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
+    {
+      "source": "/__/auth/:path*",
+      "destination": "https://pulsemap-f6930.firebaseapp.com/__/auth/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
   ]
 }

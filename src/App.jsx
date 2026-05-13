@@ -41,6 +41,7 @@ import {
 
 import { syncUserProfile } from "./services/usersService";
 import SidePanel from "./components/SidePanel";
+import EventDetails from "./components/EventDetails";
 
 const position = [51.505, -0.09];
 
@@ -51,7 +52,6 @@ const PLAN_LIMITS = {
     maxActiveEvents: 3,
     createCooldownMs: 30 * 1000,
   },
-
   premium: {
     maxActiveEvents: 20,
     createCooldownMs: 5 * 1000,
@@ -64,19 +64,16 @@ const CATEGORY_META = {
     gradient: "linear-gradient(135deg, #7b2cff, #ff4fd8)",
     glow: "rgba(255, 79, 216, 0.75)",
   },
-
   games: {
     label: "🎲 Игры",
     gradient: "linear-gradient(135deg, #0066ff, #00d9ff)",
     glow: "rgba(0, 217, 255, 0.75)",
   },
-
   chill: {
     label: "☕ Чилл",
     gradient: "linear-gradient(135deg, #00c853, #00ffd5)",
     glow: "rgba(0, 255, 213, 0.75)",
   },
-
   dating: {
     label: "❤️ Знакомства",
     gradient: "linear-gradient(135deg, #ff1744, #ff8ac7)",
@@ -86,10 +83,8 @@ const CATEGORY_META = {
 
 function createCheckpointIcon(category = "chill", isOwn = false) {
   const meta = CATEGORY_META[category] || CATEGORY_META.chill;
-
   const size = isOwn ? 66 : 60;
   const borderSize = isOwn ? 4 : 3;
-
   const background = isOwn ? "#3b124e" : "#01333F";
 
   return L.divIcon({
@@ -105,7 +100,6 @@ function createCheckpointIcon(category = "chill", isOwn = false) {
         box-shadow:0 0 ${isOwn ? 24 : 16}px ${meta.glow};
         position:relative;
       ">
-
         <div style="
           width:100%;
           height:100%;
@@ -136,15 +130,12 @@ function createCheckpointIcon(category = "chill", isOwn = false) {
               justify-content:center;
               transform:rotate(45deg);
               box-shadow:0 0 10px #FF69B4;
-            ">
-              Вы
-            </div>
+            ">Вы</div>
           `
             : ""
         }
       </div>
     `,
-
     className: "",
     iconSize: [size, size],
     iconAnchor: [size / 2, size],
@@ -153,7 +144,6 @@ function createCheckpointIcon(category = "chill", isOwn = false) {
 
 function App() {
   const [user, setUser] = useState(null);
-
   const [infoText, setInfoText] = useState(
     "Создай на карте свой первый Эвент-Пойнт и его увидят другие пользователи!"
   );
@@ -167,17 +157,13 @@ function App() {
   const [isPlacingCheckpoint, setIsPlacingCheckpoint] = useState(false);
   const [tempCheckpoint, setTempCheckpoint] = useState(null);
   const [inputText, setInputText] = useState("");
-
-  const [eventLifetime, setEventLifetime] = useState(
-    3 * 60 * 60 * 1000
-  );
+  const [eventLifetime, setEventLifetime] = useState(3 * 60 * 60 * 1000);
 
   const currentPlanLimits = PLAN_LIMITS[USER_PLAN];
 
   const ownActiveEventsCount = user
-    ? checkpoints.filter(
-        (event) => String(event.userId) === String(user.uid)
-      ).length
+    ? checkpoints.filter((event) => String(event.userId) === String(user.uid))
+        .length
     : 0;
 
   const hasReachedEventLimit =
@@ -215,7 +201,7 @@ function App() {
 
           return {
             id: documentItem.id,
-            title: data.title,
+            title: data.title || "Без названия",
             position: data.position,
             type: data.type || "public",
             category: data.category || "chill",
@@ -268,7 +254,6 @@ function App() {
     };
 
     window.addEventListener("keydown", handleEsc);
-
     return () => window.removeEventListener("keydown", handleEsc);
   }, []);
 
@@ -289,7 +274,6 @@ function App() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-
       setUser(null);
     } catch (error) {
       console.error("Ошибка выхода:", error);
@@ -308,7 +292,6 @@ function App() {
           setSelectedEvent(null);
           setIsPlacingCheckpoint(false);
           setInfoText("");
-
           return;
         }
 
@@ -329,7 +312,6 @@ function App() {
 
     if (trimmedText.length < 5) {
       alert("Описание эвента должно быть минимум 5 символов.");
-
       return;
     }
 
@@ -347,7 +329,6 @@ function App() {
         .map((docItem) => docItem.data())
         .filter((event) => {
           const expiresAt = event.expiresAt?.toMillis?.();
-
           return expiresAt && expiresAt > now;
         });
 
@@ -355,13 +336,11 @@ function App() {
         alert(
           `На бесплатном плане можно создать максимум ${currentPlanLimits.maxActiveEvents} активных Эвент-Пойнта.`
         );
-
         return;
       }
 
       const lastUserCreatedAt = userActiveEvents.reduce((latest, event) => {
         const createdAt = event.createdAt?.toMillis?.() || 0;
-
         return Math.max(latest, createdAt);
       }, 0);
 
@@ -370,7 +349,6 @@ function App() {
 
       if (cooldownLeft > 0) {
         alert(`Подожди ещё ${Math.ceil(cooldownLeft / 1000)} сек.`);
-
         return;
       }
 
@@ -398,7 +376,6 @@ function App() {
       setInfoText(newPoint.title);
     } catch (error) {
       console.error("Ошибка создания Эвент-Пойнта:", error);
-
       alert("Не получилось создать Эвент-Пойнт.");
     }
   };
@@ -410,13 +387,11 @@ function App() {
 
     if (!eventToDelete) {
       alert("Эвент не найден.");
-
       return;
     }
 
     if (String(eventToDelete.userId) !== String(user.uid)) {
       alert("Можно удалить только свой Эвент-Пойнт.");
-
       return;
     }
 
@@ -426,12 +401,10 @@ function App() {
 
     try {
       await deleteDoc(doc(db, "events", eventId));
-
       setSelectedEvent(null);
       setInfoText("Эвент-Пойнт удалён.");
     } catch (error) {
       console.error("Ошибка удаления события:", error);
-
       alert("Не получилось удалить Эвент-Пойнт.");
     }
   };
@@ -443,13 +416,11 @@ function App() {
 
     if (!eventToUpdate) {
       alert("Эвент не найден.");
-
       return;
     }
 
     if (String(eventToUpdate.userId) === String(user.uid)) {
       alert("Вы автор этого эвента.");
-
       return;
     }
 
@@ -465,7 +436,6 @@ function App() {
       });
     } catch (error) {
       console.error("Ошибка участия:", error);
-
       alert("Не получилось обновить участие.");
     }
   };
@@ -498,8 +468,6 @@ function App() {
         infoText={infoText}
         selectedEvent={selectedEvent}
         currentUserId={user.uid}
-        onDeleteEvent={handleDeleteCheckpoint}
-        onToggleJoinEvent={handleToggleJoinEvent}
         setIsPlacingCheckpoint={setIsPlacingCheckpoint}
         isPlacingCheckpoint={isPlacingCheckpoint}
         tempCheckpoint={tempCheckpoint}
@@ -539,8 +507,6 @@ function App() {
         {filteredCheckpoints.map((event) => {
           const isOwnEvent = String(event.userId) === String(user.uid);
           const category = event.category || "chill";
-          const categoryLabel = CATEGORY_META[category]?.label || "☕ Чилл";
-          const participantsCount = event.participants?.length || 0;
 
           return (
             <Marker
@@ -555,20 +521,14 @@ function App() {
               }}
             >
               <Popup>
-                <div>
-                  <strong>{event.title}</strong>
-                  <br />
-                  Категория: {categoryLabel}
-                  <br />
-                  Автор: {isOwnEvent ? "Вы" : event.userName}
-                  <br />
-                  Идут: {participantsCount}
-                  <br />
-                  Живёт до:{" "}
-                  {event.expiresAt
-                    ? new Date(event.expiresAt).toLocaleString("ru-RU")
-                    : "неизвестно"}
-                </div>
+                <EventDetails
+                  selectedEvent={event}
+                  currentUserId={user.uid}
+                  user={user}
+                  onDeleteEvent={handleDeleteCheckpoint}
+                  onToggleJoinEvent={handleToggleJoinEvent}
+                  categoryMeta={CATEGORY_META}
+                />
               </Popup>
             </Marker>
           );
