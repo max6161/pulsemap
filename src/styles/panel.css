@@ -38,11 +38,11 @@
 }
 
 .side-panel.collapsed {
-  height: 220px !important;
+  height: 96px !important;
 }
 
 .side-panel.collapsed.selected-event-mode {
-  height: 220px !important;
+  height: 96px !important;
 }
 
 .panel-top {
@@ -302,25 +302,24 @@
   color: rgba(255, 255, 255, 0.85);
 }
 
+.side-panel.collapsed .panel-search,
+.side-panel.collapsed .panel-filters,
 .side-panel.collapsed .panel-info,
-.side-panel.collapsed.selected-event-mode .panel-info {
-  height: 64px !important;
-  min-height: 64px !important;
-  max-height: 64px !important;
-
-  overflow: hidden;
-}
-
-.side-panel.collapsed .info-description {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-
-  overflow: hidden;
+.side-panel.collapsed .event-button {
+  display: none !important;
 }
 
 .side-panel.collapsed .panel-icon-button {
   display: none;
+}
+
+.side-panel.collapsed .panel-bottom {
+  height: 32px;
+  bottom: 4px;
+}
+
+.side-panel.collapsed .panel-handle {
+  bottom: 4px;
 }
 
 .side-panel.collapsed .panel-live {
@@ -672,11 +671,11 @@
 }
 
 .leaflet-popup-pane {
-  z-index: 1400 !important;
+  z-index: 1600 !important;
 }
 
 .leaflet-popup {
-  z-index: 1400 !important;
+  z-index: 1600 !important;
 }
 
 .leaflet-popup-content-wrapper {
@@ -748,7 +747,7 @@
 
 .event-details-card {
   width: 320px !important;
-  max-height: 560px !important;
+  max-height: 520px !important;
 
   padding: 18px !important;
   box-sizing: border-box;
@@ -1104,12 +1103,9 @@
     max-height: calc(100dvh - 10px);
   }
 
-  .side-panel.collapsed {
-    height: 220px !important;
-  }
-
+  .side-panel.collapsed,
   .side-panel.collapsed.selected-event-mode {
-    height: 220px !important;
+    height: 96px !important;
   }
 
   .panel-top {
@@ -1148,16 +1144,16 @@
     max-height: 150px;
   }
 
+  .side-panel.collapsed .panel-search,
+  .side-panel.collapsed .panel-filters,
   .side-panel.collapsed .panel-info,
-  .side-panel.collapsed.selected-event-mode .panel-info {
-    height: 64px !important;
-    min-height: 64px !important;
-    max-height: 64px !important;
+  .side-panel.collapsed .event-button {
+    display: none !important;
   }
 
   .panel-bottom {
     bottom: 3px;
-    height: 72px;
+    height: 32px;
   }
 
   .event-button {
@@ -1205,8 +1201,12 @@
   }
 
   .event-details-card {
-    width: min(86vw, 330px) !important;
-    max-height: 58dvh !important;
+    width: min(82vw, 320px) !important;
+    max-height: 48dvh !important;
+  }
+
+  .event-chat-messages {
+    max-height: 82px !important;
   }
 
   .event-details-title {
@@ -1217,6 +1217,10 @@
     width: 52px;
     height: 52px;
     font-size: 24px;
+  }
+
+  .leaflet-popup-content-wrapper {
+    max-width: 88vw !important;
   }
 
   .leaflet-popup-pane {
