@@ -179,37 +179,39 @@ function App() {
     ? `Лимит бесплатного плана: ${currentPlanLimits.maxActiveEvents} активных Эвент-Пойнта.`
     : "Создай на карте свой первый Эвент-Пойнт и его увидят другие пользователи!";
 
-  useEffect(() => {
-    let unsubscribeAuth = null;
-    let cancelled = false;
+ useEffect(() => {
+  let cancelled = false;
 
-    async function initAuth() {
-      try {
-        await getRedirectResult(auth);
-      } catch (error) {
-        console.error("Ошибка redirect-входа:", error);
-      }
+  const fallbackTimer = setTimeout(() => {
+    if (!cancelled) {
+      setAuthReady(true);
+    }
+  }, 5000);
 
-      unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
-        if (cancelled) return;
+  const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
+    if (cancelled) return;
 
-        setUser(currentUser);
+    clearTimeout(fallbackTimer);
 
-        if (currentUser) {
-          await syncUserProfile(currentUser);
-        }
+    setUser(currentUser);
 
-        setAuthReady(true);
-      });
+    if (currentUser) {
+      await syncUserProfile(currentUser);
     }
 
-    initAuth();
+    setAuthReady(true);
+  });
 
-    return () => {
-      cancelled = true;
-      if (unsubscribeAuth) unsubscribeAuth();
-    };
-  }, []);
+  getRedirectResult(auth).catch((error) => {
+    console.error("Ошибка redirect-входа:", error);
+  });
+
+  return () => {
+    cancelled = true;
+    clearTimeout(fallbackTimer);
+    unsubscribeAuth();
+  };
+}, []);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "events"), (snapshot) => {
