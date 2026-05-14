@@ -19,6 +19,7 @@ import {
   getRedirectResult,
   provider,
   auth,
+  authPersistenceReady,
   signOut,
   onAuthStateChanged,
   db,
@@ -280,23 +281,30 @@ function App() {
   }, []);
 
   const handleLogin = async () => {
-    try {
-      if (isMobileBrowser()) {
-        await signInWithRedirect(auth, provider);
-        return;
-      }
+  try {
+    await authPersistenceReady;
 
-      await signInWithPopup(auth, provider);
-    } catch (popupError) {
-      console.error("Popup login failed, trying redirect:", popupError);
+    const mobile = isMobileBrowser();
 
-      try {
-        await signInWithRedirect(auth, provider);
-      } catch (redirectError) {
-        console.error("Redirect login failed:", redirectError);
-      }
+    if (mobile) {
+      console.log("Mobile login: redirect start");
+      signInWithRedirect(auth, provider);
+      return;
     }
-  };
+
+    await signInWithPopup(auth, provider);
+  } catch (popupError) {
+    console.error("Popup login failed, trying redirect:", popupError);
+
+    try {
+      await authPersistenceReady;
+      signInWithRedirect(auth, provider);
+    } catch (redirectError) {
+      console.error("Redirect login failed:", redirectError);
+      alert("Не получилось открыть вход через Google.");
+    }
+  }
+};
 
   const handleLogout = async () => {
     try {

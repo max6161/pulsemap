@@ -28,7 +28,10 @@ const app = initializeApp(firebaseConfig);
 
 const auth = getAuth(app);
 
-setPersistence(auth, browserLocalPersistence).catch((error) => {
+const authPersistenceReady = setPersistence(
+  auth,
+  browserLocalPersistence
+).catch((error) => {
   console.error("Auth persistence error:", error);
 });
 
@@ -44,6 +47,7 @@ export {
   auth,
   provider,
   db,
+  authPersistenceReady,
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
