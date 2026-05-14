@@ -1,265 +1,1238 @@
-import { useState } from "react";
-import "../styles/panel.css";
+.side-panel {
+  position: absolute;
+  top: 5px;
+  left: 5px;
 
-export default function SidePanel({
-  user,
-  onLogout,
-  infoText,
-  selectedEvent,
-  currentUserId,
-  setIsPlacingCheckpoint,
-  isPlacingCheckpoint,
-  tempCheckpoint,
-  inputText,
-  setInputText,
-  handleSaveCheckpoint,
-  eventLifetime,
-  setEventLifetime,
-  activeFilter,
-  setActiveFilter,
-  selectedCategory,
-  setSelectedCategory,
-  categoryMeta
-}) {
-  const [collapsed, setCollapsed] = useState(false);
-  const [textareaHeight, setTextareaHeight] = useState(92);
+  width: 430px;
+  height: 335px;
 
-  const filters = [
-    { id: "all", label: "Все" },
-    { id: "music", label: "🎵 Музыка" },
-    { id: "games", label: "🎲 Игры" },
-    { id: "chill", label: "☕ Чилл" },
-    { id: "dating", label: "❤️ Знакомства" }
-  ];
+  max-width: calc(100vw - 10px);
+  max-height: calc(100dvh - 10px);
 
-  const categoryOptions = filters.filter((filter) => filter.id !== "all");
+  background:
+    linear-gradient(
+      145deg,
+      rgba(9, 38, 48, 0.82),
+      rgba(28, 82, 86, 0.66)
+    );
 
-  const lifetimeOptions = [
-    { label: "1ч", value: 1 * 60 * 60 * 1000 },
-    { label: "3ч", value: 3 * 60 * 60 * 1000 },
-    { label: "12ч", value: 12 * 60 * 60 * 1000 },
-    { label: "1 день", value: 24 * 60 * 60 * 1000 },
-    { label: "3 дня", value: 3 * 24 * 60 * 60 * 1000 }
-  ];
+  border: 1px solid rgba(0, 191, 255, 0.55);
+  border-radius: 22px;
 
-  const selectedCategoryLabel =
-    categoryMeta?.[selectedEvent?.category || "chill"]?.label || "☕ Чилл";
+  padding: 10px;
+  box-sizing: border-box;
 
-  const selectedEventIsOwn =
-    selectedEvent && String(selectedEvent.userId) === String(currentUserId);
+  display: flex;
+  flex-direction: column;
 
-  const handleDescriptionChange = (e) => {
-    setInputText(e.target.value);
-    e.target.style.height = "92px";
+  z-index: 1000;
+  backdrop-filter: blur(10px);
 
-    const nextHeight = Math.min(e.target.scrollHeight, 190);
-    setTextareaHeight(Math.max(92, nextHeight));
-  };
+  transition: height 0.3s ease;
+  overflow: hidden;
 
-  const editExtraHeight = Math.max(0, textareaHeight - 92);
+  box-shadow:
+    0 18px 45px rgba(0, 0, 0, 0.35),
+    inset 0 0 35px rgba(255, 255, 255, 0.04),
+    0 0 18px rgba(0, 191, 255, 0.2);
+}
 
-  return (
-    <div
-      className={`side-panel ${collapsed ? "collapsed" : ""} ${
-        isPlacingCheckpoint ? "placing-mode" : ""
-      } ${selectedEvent ? "selected-event-mode" : ""}`}
-      style={
-        tempCheckpoint
-          ? {
-              "--event-textarea-height": `${textareaHeight}px`,
-              "--event-edit-extra-height": `${editExtraHeight}px`
-            }
-          : undefined
-      }
-    >
-      <div className="panel-top">
-        <div className="panel-profile">
-          <div className="panel-avatar">
-            {user?.photoURL ? (
-              <img src={user.photoURL} alt="avatar" />
-            ) : (
-              <span>{user?.displayName?.[0] || "U"}</span>
-            )}
-          </div>
+.side-panel.collapsed {
+  height: 96px !important;
+}
 
-          <div className="panel-user-text">
-            Привет, {user?.displayName || "User"}
-          </div>
-        </div>
+.side-panel.collapsed.selected-event-mode {
+  height: 96px !important;
+}
 
-        <div className="panel-live">
-          <span className="live-dot" />
-          <span>4 активных рядом</span>
-        </div>
+.panel-top {
+  height: 36px;
+  min-height: 36px;
 
-        <button className="panel-icon-button" type="button">
-          🌐
-        </button>
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-        <button className="panel-icon-button" type="button">
-          ⚙️
-        </button>
+.panel-profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 
-        <button className="panel-logout" onClick={onLogout}>
-          Выход
-        </button>
-      </div>
+  min-width: 0;
+  flex: 1;
+}
 
-      {!collapsed && (
-        <>
-          <div className="panel-search">
-            <span className="search-icon">⌕</span>
-            <input placeholder="Поиск эвент-поинтов..." />
-          </div>
+.panel-avatar {
+  width: 32px;
+  height: 32px;
 
-          <div className="panel-filters">
-            {filters.map((filter) => (
-              <button
-                key={filter.id}
-                type="button"
-                className={`filter-chip ${
-                  activeFilter === filter.id ? "active" : ""
-                }`}
-                onClick={() => setActiveFilter(filter.id)}
-              >
-                {filter.label}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
+  border-radius: 50%;
+  overflow: hidden;
 
-      {isPlacingCheckpoint && (
-        <div className="placing-status">
-          <span className="placing-dot" />
-          <span>Выбери место на карте</span>
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-          <button type="button" onClick={() => setIsPlacingCheckpoint(false)}>
-            Отмена
-          </button>
-        </div>
-      )}
+  background: #01333f;
+  border: 2px solid #d355c6;
+  color: white;
+  font-size: 13px;
 
-      <div className={`panel-info ${tempCheckpoint ? "event-edit-mode" : ""}`}>
-        {!tempCheckpoint && selectedEvent && (
-          <div className="selected-event-info">
-            <div className="info-title">{selectedEvent.title}</div>
+  box-shadow: 0 0 12px rgba(211, 85, 198, 0.55);
+}
 
-            <div className="info-description">
-              Категория: {selectedCategoryLabel}
-              <br />
-              Автор: {selectedEventIsOwn ? "Вы" : selectedEvent.userName}
-              <br />
-              Идут: {selectedEvent.participants?.length || 0}
-              <br />
-              Открой карточку над меткой для подробностей и чата.
-            </div>
-          </div>
-        )}
+.panel-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 
-        {!tempCheckpoint && !selectedEvent && (
-          <div className="info-text">
-            <div className="info-title">
-              {isPlacingCheckpoint
-                ? "Режим создания Эвент-Пойнта"
-                : "Создай первый Эвент-Пойнт"}
-            </div>
+.panel-user-text {
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
 
-            <div className="info-description">
-              {isPlacingCheckpoint
-                ? "Нажми на карту в том месте, где хочешь поставить новый эвент."
-                : infoText}
-            </div>
-          </div>
-        )}
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-        {tempCheckpoint && (
-          <div className="event-edit-content">
-            <textarea
-              value={inputText}
-              onChange={handleDescriptionChange}
-              placeholder="Опиши свой Эвент-Пойнт и выбери подходящую категорию ниже..."
-              className="event-description-input"
-              autoFocus
-            />
+.panel-live {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 
-            <div className="event-lifetime">
-              <div className="event-lifetime-title">Категория эвента</div>
+  padding: 6px 10px;
 
-              <div className="event-lifetime-options">
-                {categoryOptions.map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    className={`lifetime-chip ${
-                      selectedCategory === option.id ? "active" : ""
-                    }`}
-                    onClick={() => setSelectedCategory(option.id)}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+  border-radius: 999px;
+  border: 1px solid rgba(0, 255, 180, 0.35);
 
-            <div className="event-lifetime">
-              <div className="event-lifetime-title">
-                Сколько будет активен?
-              </div>
+  color: #77ffd2;
+  font-size: 12px;
 
-              <div className="event-lifetime-options">
-                {lifetimeOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={`lifetime-chip ${
-                      eventLifetime === option.value ? "active" : ""
-                    }`}
-                    onClick={() => setEventLifetime(option.value)}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+  background: rgba(2, 30, 38, 0.55);
+}
 
-      <div className={`panel-bottom ${tempCheckpoint ? "edit-bottom" : ""}`}>
-        <button
-          className={`event-button public ${
-            isPlacingCheckpoint ? "active" : ""
-          }`}
-          onClick={() => setIsPlacingCheckpoint(true)}
-          aria-label="Создать публичный эвент"
-        >
-          <span>📍</span>
-        </button>
+.live-dot {
+  width: 8px;
+  height: 8px;
 
-        {tempCheckpoint && (
-          <button
-            type="button"
-            className="bottom-save-button"
-            onClick={handleSaveCheckpoint}
-          >
-            Создать
-          </button>
-        )}
+  border-radius: 50%;
+  background: #20ff9f;
 
-        <button
-          className="panel-handle"
-          onClick={() => setCollapsed(!collapsed)}
-          aria-label="Свернуть или развернуть меню"
-        />
+  box-shadow: 0 0 10px #20ff9f;
+  animation: livePulse 1.6s infinite ease-in-out;
+}
 
-        <button
-          className="event-button private"
-          aria-label="Создать приватный эвент"
-        >
-          <span>🔒</span>
-        </button>
-      </div>
-    </div>
-  );
+@keyframes livePulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.55;
+  }
+
+  50% {
+    transform: scale(1.25);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(0.9);
+    opacity: 0.55;
+  }
+}
+
+.panel-icon-button,
+.panel-logout {
+  height: 32px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(0, 191, 255, 0.35);
+
+  background: rgba(1, 51, 63, 0.75);
+  color: white;
+
+  cursor: pointer;
+}
+
+.panel-icon-button {
+  width: 32px;
+  font-size: 15px;
+}
+
+.panel-logout {
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.panel-search {
+  position: relative;
+  margin-top: 8px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 18px;
+}
+
+.panel-search input {
+  width: 100%;
+
+  padding: 9px 10px 9px 35px;
+  box-sizing: border-box;
+
+  border-radius: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+
+  background: rgba(3, 28, 36, 0.62);
+  color: white;
+
+  font-size: 13px;
+  outline: none;
+}
+
+.panel-search input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.panel-filters {
+  display: flex;
+  gap: 8px;
+
+  margin-top: 8px;
+
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.panel-filters::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-chip {
+  flex-shrink: 0;
+
+  padding: 7px 11px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+
+  background: rgba(2, 28, 36, 0.58);
+  color: white;
+
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.filter-chip.active {
+  border-color: #00bfff;
+  background: rgba(0, 191, 255, 0.16);
+  box-shadow: 0 0 14px rgba(0, 191, 255, 0.35);
+}
+
+.panel-info {
+  margin-top: 9px;
+
+  border: 1px solid rgba(147, 110, 255, 0.85);
+  border-radius: 16px;
+
+  padding: 12px;
+  box-sizing: border-box;
+
+  color: white;
+
+  height: 145px;
+  max-height: 145px;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  background:
+    radial-gradient(
+      circle at 15% 35%,
+      rgba(147, 110, 255, 0.22),
+      transparent 35%
+    ),
+    rgba(5, 35, 46, 0.5);
+
+  box-shadow:
+    inset 0 0 20px rgba(147, 110, 255, 0.08),
+    0 0 12px rgba(147, 110, 255, 0.15);
+
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 191, 255, 0.65) rgba(2, 28, 36, 0.35);
+}
+
+.panel-info::-webkit-scrollbar {
+  width: 7px;
+}
+
+.panel-info::-webkit-scrollbar-track {
+  margin-top: 12px;
+  margin-bottom: 12px;
+
+  background: rgba(2, 28, 36, 0.35);
+  border-radius: 999px;
+}
+
+.panel-info::-webkit-scrollbar-thumb {
+  background: rgba(0, 191, 255, 0.65);
+  border-radius: 999px;
+}
+
+.panel-info::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 105, 180, 0.8);
+}
+
+.info-title {
+  font-size: 15px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.info-description {
+  font-size: 13px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.side-panel.collapsed .panel-search,
+.side-panel.collapsed .panel-filters,
+.side-panel.collapsed .panel-info,
+.side-panel.collapsed .event-button {
+  display: none !important;
+}
+
+.side-panel.collapsed .panel-icon-button {
+  display: none;
+}
+
+.side-panel.collapsed .panel-bottom {
+  height: 32px;
+  bottom: 4px;
+}
+
+.side-panel.collapsed .panel-handle {
+  bottom: 4px;
+}
+
+.side-panel.collapsed .panel-live {
+  font-size: 11px;
+  padding: 6px 8px;
+}
+
+.panel-bottom {
+  position: absolute;
+
+  left: 10px;
+  right: 10px;
+  bottom: 3px;
+
+  height: 72px;
+
+  box-sizing: border-box;
+}
+
+.event-button {
+  position: absolute;
+
+  width: 58px;
+  height: 58px;
+
+  bottom: 22px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.12), transparent 45%),
+    rgba(1, 31, 42, 0.92);
+
+  transition: 0.2s;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+}
+
+.event-button span {
+  font-size: 24px;
+}
+
+.event-button:active {
+  transform: scale(0.92);
+  filter: brightness(1.25);
+}
+
+.event-button.public {
+  left: calc(50% - 155px);
+
+  border: 2px solid #d355c6;
+  box-shadow:
+    0 0 18px rgba(211, 85, 198, 0.65),
+    inset 0 0 20px rgba(211, 85, 198, 0.08);
+}
+
+.event-button.private {
+  right: calc(50% - 155px);
+
+  border: 2px solid #00bfff;
+  box-shadow:
+    0 0 18px rgba(0, 191, 255, 0.65),
+    inset 0 0 20px rgba(0, 191, 255, 0.08);
+}
+
+.panel-handle {
+  position: absolute;
+
+  left: 50%;
+  bottom: 3px;
+  transform: translateX(-50%);
+
+  width: 90px;
+  height: 16px;
+
+  background: rgba(220, 220, 220, 0.88);
+  border: none;
+  border-radius: 999px;
+
+  cursor: pointer;
+
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.45);
+}
+
+.bottom-save-button {
+  position: absolute;
+
+  left: 50%;
+  bottom: 25px;
+  transform: translateX(-50%);
+
+  z-index: 20;
+
+  min-width: 110px;
+  padding: 8px 22px;
+
+  border-radius: 999px;
+  border: none;
+
+  background: #00bfff;
+  color: white;
+
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+
+  box-shadow: 0 0 16px rgba(0, 191, 255, 0.75);
+}
+
+.bottom-save-button:active {
+  transform: translateX(-50%) scale(0.94);
+}
+
+.placing-status {
+  margin-top: 8px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 7px 9px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(0, 191, 255, 0.45);
+
+  background: rgba(0, 191, 255, 0.12);
+  color: white;
+
+  font-size: 12px;
+}
+
+.placing-dot {
+  width: 8px;
+  height: 8px;
+
+  border-radius: 50%;
+  background: #00bfff;
+
+  box-shadow: 0 0 12px #00bfff;
+  animation: livePulse 1.2s infinite ease-in-out;
+}
+
+.placing-status button {
+  margin-left: auto;
+
+  padding: 4px 8px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(255, 105, 180, 0.7);
+
+  background: rgba(255, 105, 180, 0.16);
+  color: white;
+
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.side-panel:has(.event-edit-mode) {
+  height: calc(430px + var(--event-edit-extra-height, 0px));
+}
+
+.side-panel:has(.event-edit-mode) .panel-info {
+  height: calc(225px + var(--event-edit-extra-height, 0px));
+  max-height: calc(225px + var(--event-edit-extra-height, 0px));
+
+  padding: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  border-radius: 16px;
+  clip-path: inset(0 round 16px);
+}
+
+.event-edit-content {
+  width: calc(100% - 12px);
+  min-height: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 10px;
+
+  padding-bottom: 14px;
+  box-sizing: border-box;
+}
+
+.event-description-input {
+  width: 100%;
+  height: var(--event-textarea-height, 92px);
+
+  min-height: 92px;
+  max-height: 190px;
+
+  padding: 12px;
+  box-sizing: border-box;
+
+  border: none;
+  outline: none;
+  resize: none;
+
+  background: transparent;
+  color: white;
+
+  font-size: 14px;
+  line-height: 1.35;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 191, 255, 0.55) rgba(2, 28, 36, 0.35);
+}
+
+.event-description-input::placeholder {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.event-description-input::-webkit-scrollbar {
+  width: 7px;
+}
+
+.event-description-input::-webkit-scrollbar-track {
+  margin-top: 8px;
+  margin-bottom: 8px;
+
+  background: rgba(2, 28, 36, 0.35);
+  border-radius: 999px;
+}
+
+.event-description-input::-webkit-scrollbar-thumb {
+  background: rgba(0, 191, 255, 0.55);
+  border-radius: 999px;
+}
+
+.event-lifetime {
+  padding: 0 10px;
+}
+
+.event-lifetime-title {
+  margin-bottom: 6px;
+
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.event-lifetime-options {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.lifetime-chip {
+  padding: 5px 8px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+
+  background: rgba(2, 28, 36, 0.65);
+  color: white;
+
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.lifetime-chip.active {
+  border-color: #ff69b4;
+  background: rgba(255, 105, 180, 0.22);
+  box-shadow: 0 0 12px rgba(255, 105, 180, 0.45);
+}
+
+.side-panel.selected-event-mode {
+  height: 355px;
+}
+
+.side-panel.selected-event-mode .panel-info {
+  height: 145px;
+  max-height: 145px;
+}
+
+.selected-event-info {
+  height: 100%;
+}
+
+.participants-stack {
+  display: flex;
+  align-items: center;
+
+  margin-top: 6px;
+  margin-bottom: 6px;
+
+  min-height: 28px;
+}
+
+.participant-avatar {
+  width: 28px;
+  height: 28px;
+
+  margin-left: -7px;
+
+  border-radius: 50%;
+  border: 2px solid rgba(0, 191, 255, 0.75);
+
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(1, 51, 63, 0.95);
+  color: white;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  box-shadow: 0 0 10px rgba(0, 191, 255, 0.45);
+}
+
+.participant-avatar:first-child {
+  margin-left: 0;
+}
+
+.participant-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.participant-more {
+  background: rgba(255, 105, 180, 0.9);
+  border-color: rgba(255, 105, 180, 0.9);
+  box-shadow: 0 0 10px rgba(255, 105, 180, 0.5);
+}
+
+@property --border-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes neonBorderSpin {
+  to {
+    --border-angle: 360deg;
+  }
+}
+
+.leaflet-popup-pane {
+  z-index: 1600 !important;
+}
+
+.leaflet-popup {
+  z-index: 1600 !important;
+}
+
+.leaflet-popup-content-wrapper {
+  padding: 2px !important;
+  border: none !important;
+  border-radius: 24px !important;
+
+  background:
+    conic-gradient(
+      from var(--border-angle),
+      #00bfff,
+      #936eff,
+      #ff4fd8,
+      #00ffd5,
+      #00bfff
+    ) !important;
+
+  animation: neonBorderSpin 8s linear infinite;
+
+  box-shadow:
+    0 0 24px rgba(0, 191, 255, 0.34),
+    0 0 44px rgba(255, 79, 216, 0.2),
+    0 18px 52px rgba(0, 0, 0, 0.55) !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  padding: 0 !important;
+
+  overflow: hidden;
+  border-radius: 22px !important;
+
+  background:
+    radial-gradient(
+      circle at 0% 0%,
+      rgba(255, 79, 216, 0.12),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(0, 191, 255, 0.16),
+      transparent 32%
+    ),
+    linear-gradient(
+      145deg,
+      rgba(3, 17, 27, 0.98),
+      rgba(7, 36, 48, 0.95)
+    ) !important;
+}
+
+.leaflet-popup-tip {
+  background: rgba(6, 24, 36, 0.98) !important;
+
+  box-shadow:
+    0 0 18px rgba(0, 191, 255, 0.28),
+    0 0 22px rgba(255, 79, 216, 0.18);
+}
+
+.leaflet-popup-close-button {
+  color: rgba(255, 255, 255, 0.78) !important;
+  font-size: 22px !important;
+  top: 10px !important;
+  right: 12px !important;
+}
+
+.leaflet-popup-close-button:hover {
+  color: #00d9ff !important;
+}
+
+.event-details-card {
+  width: 320px !important;
+  max-height: 520px !important;
+
+  padding: 18px !important;
+  box-sizing: border-box;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  color: white;
+
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 191, 255, 0.65) rgba(2, 28, 36, 0.35);
+}
+
+.event-details-card::-webkit-scrollbar {
+  width: 7px;
+}
+
+.event-details-card::-webkit-scrollbar-track {
+  margin-top: 12px;
+  margin-bottom: 12px;
+
+  background: rgba(2, 28, 36, 0.35);
+  border-radius: 999px;
+}
+
+.event-details-card::-webkit-scrollbar-thumb {
+  background: rgba(0, 191, 255, 0.65);
+  border-radius: 999px;
+}
+
+.event-details-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.11);
+}
+
+.event-details-avatar {
+  width: 58px;
+  height: 58px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.12), transparent 48%),
+    rgba(2, 18, 29, 0.95);
+
+  border: 2px solid #ff4fd8;
+
+  font-size: 26px;
+
+  box-shadow:
+    0 0 16px rgba(255, 79, 216, 0.7),
+    0 0 28px rgba(147, 110, 255, 0.4);
+}
+
+.event-details-heading {
+  min-width: 0;
+  flex: 1;
+}
+
+.event-details-title {
+  margin-bottom: 8px;
+
+  font-size: 21px;
+  line-height: 1.1;
+  font-weight: 900;
+
+  color: white;
+
+  text-shadow:
+    0 0 12px rgba(0, 191, 255, 0.22),
+    0 0 18px rgba(255, 79, 216, 0.18);
+}
+
+.event-details-status {
+  width: fit-content;
+
+  padding: 5px 10px;
+
+  border-radius: 999px;
+
+  background: rgba(0, 191, 255, 0.16);
+  border: 1px solid rgba(0, 191, 255, 0.42);
+
+  color: #77ffd2;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  box-shadow: 0 0 14px rgba(0, 191, 255, 0.25);
+}
+
+.event-details-main {
+  padding: 2px 0 8px;
+}
+
+.event-details-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+
+  margin-bottom: 9px;
+
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.event-details-line span {
+  width: 18px;
+  flex-shrink: 0;
+
+  color: #00d9ff;
+  text-shadow: 0 0 10px rgba(0, 191, 255, 0.5);
+}
+
+.event-details-line p {
+  margin: 0;
+  line-height: 1.35;
+}
+
+.event-details-line.muted {
+  padding-top: 10px;
+  margin-top: 8px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.11);
+
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 12px;
+}
+
+.event-details-secondary {
+  padding-top: 10px;
+  margin-top: 8px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.11);
+}
+
+.event-chat {
+  margin-top: 14px !important;
+  margin-bottom: 14px !important;
+
+  padding: 12px !important;
+
+  border-radius: 16px;
+
+  background: rgba(2, 18, 29, 0.46);
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.02);
+}
+
+.event-chat-title {
+  margin-bottom: 8px;
+
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.event-chat-title::before {
+  content: "💬 ";
+}
+
+.event-chat-messages {
+  max-height: 130px !important;
+  overflow-y: auto;
+
+  padding-right: 4px;
+}
+
+.event-chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.event-chat-messages::-webkit-scrollbar-track {
+  background: rgba(2, 28, 36, 0.35);
+  border-radius: 999px;
+}
+
+.event-chat-messages::-webkit-scrollbar-thumb {
+  background: rgba(0, 191, 255, 0.55);
+  border-radius: 999px;
+}
+
+.event-chat-empty {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+}
+
+.event-chat-message {
+  margin-bottom: 8px;
+}
+
+.event-chat-author {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.event-chat-author img,
+.event-chat-author span {
+  width: 22px;
+  height: 22px;
+
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(1, 51, 63, 0.95);
+  border: 1px solid rgba(0, 191, 255, 0.6);
+
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.event-chat-author img {
+  object-fit: cover;
+}
+
+.event-chat-text {
+  margin-left: 29px;
+  margin-top: 3px;
+
+  font-size: 12px;
+  line-height: 1.3;
+
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.event-chat-form {
+  display: flex;
+  gap: 7px;
+
+  margin-top: 10px;
+}
+
+.event-chat-form input {
+  flex: 1;
+
+  min-width: 0;
+
+  padding: 9px 12px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+
+  background: rgba(2, 28, 36, 0.76);
+  color: white;
+
+  font-size: 12px;
+  outline: none;
+
+  box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.22);
+}
+
+.event-chat-form input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.event-chat-form button {
+  width: 34px;
+  height: 34px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+  border: none;
+
+  background:
+    radial-gradient(circle at 40% 35%, rgba(255, 255, 255, 0.28), transparent 42%),
+    linear-gradient(135deg, #00bfff, #936eff);
+
+  color: white;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 0 14px rgba(0, 191, 255, 0.6),
+    0 0 18px rgba(147, 110, 255, 0.38);
+}
+
+.event-details-actions {
+  display: flex;
+  gap: 10px;
+
+  margin-top: 12px;
+}
+
+.join-event-button,
+.delete-event-button {
+  margin-top: 10px;
+  padding: 9px 15px;
+
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.join-event-button {
+  border: 1px solid rgba(0, 191, 255, 0.6);
+  background: rgba(0, 191, 255, 0.14);
+  color: #b8f7ff;
+
+  box-shadow: 0 0 14px rgba(0, 191, 255, 0.42);
+}
+
+.join-event-button.joined {
+  border-color: rgba(255, 105, 180, 0.8);
+  background: rgba(255, 105, 180, 0.22);
+  color: white;
+
+  box-shadow: 0 0 14px rgba(255, 105, 180, 0.55);
+}
+
+.delete-event-button {
+  border: 1px solid rgba(255, 79, 123, 0.65);
+  background: rgba(255, 79, 123, 0.2);
+  color: white;
+
+  box-shadow: 0 0 16px rgba(255, 79, 123, 0.42);
+}
+
+@media (max-width: 768px) {
+  .side-panel {
+    top: 5px;
+    bottom: auto;
+    left: 5px;
+
+    width: calc(100vw - 10px);
+    max-width: calc(100vw - 10px);
+
+    height: 360px;
+    max-height: calc(100dvh - 10px);
+  }
+
+  .side-panel.collapsed,
+  .side-panel.collapsed.selected-event-mode {
+    height: 96px !important;
+  }
+
+  .panel-top {
+    gap: 5px;
+  }
+
+  .panel-avatar {
+    width: 30px;
+    height: 30px;
+  }
+
+  .panel-user-text {
+    font-size: 12px;
+    max-width: 120px;
+  }
+
+  .panel-live {
+    font-size: 11px;
+    padding: 6px 8px;
+  }
+
+  .panel-icon-button {
+    width: 30px;
+    height: 30px;
+  }
+
+  .panel-logout {
+    display: block;
+    height: 30px;
+    padding: 0 9px;
+    font-size: 11px;
+  }
+
+  .panel-info {
+    height: 150px;
+    max-height: 150px;
+  }
+
+  .side-panel.collapsed .panel-search,
+  .side-panel.collapsed .panel-filters,
+  .side-panel.collapsed .panel-info,
+  .side-panel.collapsed .event-button {
+    display: none !important;
+  }
+
+  .panel-bottom {
+    bottom: 3px;
+    height: 32px;
+  }
+
+  .event-button {
+    width: 52px;
+    height: 52px;
+
+    bottom: 22px;
+  }
+
+  .event-button.public {
+    left: calc(50% - 135px);
+  }
+
+  .event-button.private {
+    right: calc(50% - 135px);
+  }
+
+  .panel-handle {
+    width: 78px;
+    height: 16px;
+  }
+
+  .bottom-save-button {
+    bottom: 25px;
+    padding: 8px 20px;
+  }
+
+  .side-panel:has(.event-edit-mode) {
+    height: calc(455px + var(--event-edit-extra-height, 0px));
+    max-height: calc(100dvh - 10px);
+  }
+
+  .side-panel:has(.event-edit-mode) .panel-info {
+    height: calc(250px + var(--event-edit-extra-height, 0px));
+    max-height: calc(250px + var(--event-edit-extra-height, 0px));
+  }
+
+  .side-panel.selected-event-mode {
+    height: 360px;
+  }
+
+  .side-panel.selected-event-mode .panel-info {
+    height: 150px;
+    max-height: 150px;
+  }
+
+  .event-details-card {
+    width: min(82vw, 320px) !important;
+    max-height: 48dvh !important;
+  }
+
+  .event-chat-messages {
+    max-height: 82px !important;
+  }
+
+  .event-details-title {
+    font-size: 18px;
+  }
+
+  .event-details-avatar {
+    width: 52px;
+    height: 52px;
+    font-size: 24px;
+  }
+
+  .leaflet-popup-content-wrapper {
+    max-width: 88vw !important;
+  }
+
+  .leaflet-popup-pane {
+    z-index: 1600 !important;
+  }
+
+  .leaflet-popup {
+    z-index: 1600 !important;
+  }
+
+  .leaflet-bottom.leaflet-left {
+    bottom: 18px;
+    left: 8px;
+  }
 }

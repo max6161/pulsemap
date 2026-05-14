@@ -180,39 +180,39 @@ function App() {
     ? `Лимит бесплатного плана: ${currentPlanLimits.maxActiveEvents} активных Эвент-Пойнта.`
     : "Создай на карте свой первый Эвент-Пойнт и его увидят другие пользователи!";
 
- useEffect(() => {
-  let cancelled = false;
+  useEffect(() => {
+    let cancelled = false;
 
-  const fallbackTimer = setTimeout(() => {
-    if (!cancelled) {
+    const fallbackTimer = setTimeout(() => {
+      if (!cancelled) {
+        setAuthReady(true);
+      }
+    }, 5000);
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
+      if (cancelled) return;
+
+      clearTimeout(fallbackTimer);
+
+      setUser(currentUser);
+
+      if (currentUser) {
+        await syncUserProfile(currentUser);
+      }
+
       setAuthReady(true);
-    }
-  }, 5000);
+    });
 
-  const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
-    if (cancelled) return;
+    getRedirectResult(auth).catch((error) => {
+      console.error("Ошибка redirect-входа:", error);
+    });
 
-    clearTimeout(fallbackTimer);
-
-    setUser(currentUser);
-
-    if (currentUser) {
-      await syncUserProfile(currentUser);
-    }
-
-    setAuthReady(true);
-  });
-
-  getRedirectResult(auth).catch((error) => {
-    console.error("Ошибка redirect-входа:", error);
-  });
-
-  return () => {
-    cancelled = true;
-    clearTimeout(fallbackTimer);
-    unsubscribeAuth();
-  };
-}, []);
+    return () => {
+      cancelled = true;
+      clearTimeout(fallbackTimer);
+      unsubscribeAuth();
+    };
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "events"), (snapshot) => {
@@ -281,30 +281,27 @@ function App() {
   }, []);
 
   const handleLogin = async () => {
-  try {
-    await authPersistenceReady;
-
-    const mobile = isMobileBrowser();
-
-    if (mobile) {
-      console.log("Mobile login: redirect start");
-      signInWithRedirect(auth, provider);
-      return;
-    }
-
-    await signInWithPopup(auth, provider);
-  } catch (popupError) {
-    console.error("Popup login failed, trying redirect:", popupError);
-
     try {
       await authPersistenceReady;
-      signInWithRedirect(auth, provider);
-    } catch (redirectError) {
-      console.error("Redirect login failed:", redirectError);
-      alert("Не получилось открыть вход через Google.");
+
+      if (isMobileBrowser()) {
+        signInWithRedirect(auth, provider);
+        return;
+      }
+
+      await signInWithPopup(auth, provider);
+    } catch (popupError) {
+      console.error("Popup login failed, trying redirect:", popupError);
+
+      try {
+        await authPersistenceReady;
+        signInWithRedirect(auth, provider);
+      } catch (redirectError) {
+        console.error("Redirect login failed:", redirectError);
+        alert("Не получилось открыть вход через Google.");
+      }
     }
-  }
-};
+  };
 
   const handleLogout = async () => {
     try {
@@ -563,7 +560,18 @@ function App() {
                 },
               }}
             >
-              <Popup>
+              <Popup
+                autoPan={true}
+                keepInView={true}
+                maxWidth={340}
+                minWidth={300}
+                autoPanPaddingTopLeft={
+                  isMobileBrowser() ? [20, 390] : [40, 40]
+                }
+                autoPanPaddingBottomRight={
+                  isMobileBrowser() ? [20, 90] : [40, 40]
+                }
+              >
                 <EventDetails
                   selectedEvent={event}
                   currentUserId={user.uid}
