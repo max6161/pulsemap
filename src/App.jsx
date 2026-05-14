@@ -81,6 +81,10 @@ const CATEGORY_META = {
   },
 };
 
+function isMobileBrowser() {
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+}
+
 function createCheckpointIcon(category = "chill", isOwn = false) {
   const meta = CATEGORY_META[category] || CATEGORY_META.chill;
   const size = isOwn ? 66 : 60;
@@ -144,6 +148,8 @@ function createCheckpointIcon(category = "chill", isOwn = false) {
 
 function App() {
   const [user, setUser] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
+
   const [infoText, setInfoText] = useState(
     "Создай на карте свой первый Эвент-Пойнт и его увидят другие пользователи!"
   );
@@ -174,21 +180,35 @@ function App() {
     : "Создай на карте свой первый Эвент-Пойнт и его увидят другие пользователи!";
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
+    let unsubscribeAuth = null;
+    let cancelled = false;
 
-      if (currentUser) {
-        await syncUserProfile(currentUser);
+    async function initAuth() {
+      try {
+        await getRedirectResult(auth);
+      } catch (error) {
+        console.error("Ошибка redirect-входа:", error);
       }
-    });
 
-    return () => unsubscribe();
-  }, []);
+      unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
+        if (cancelled) return;
 
-  useEffect(() => {
-    getRedirectResult(auth).catch((error) => {
-      console.error("Ошибка redirect-входа:", error);
-    });
+        setUser(currentUser);
+
+        if (currentUser) {
+          await syncUserProfile(currentUser);
+        }
+
+        setAuthReady(true);
+      });
+    }
+
+    initAuth();
+
+    return () => {
+      cancelled = true;
+      if (unsubscribeAuth) unsubscribeAuth();
+    };
   }, []);
 
   useEffect(() => {
@@ -259,6 +279,11 @@ function App() {
 
   const handleLogin = async () => {
     try {
+      if (isMobileBrowser()) {
+        await signInWithRedirect(auth, provider);
+        return;
+      }
+
       await signInWithPopup(auth, provider);
     } catch (popupError) {
       console.error("Popup login failed, trying redirect:", popupError);
@@ -446,6 +471,14 @@ function App() {
       : checkpoints.filter(
           (event) => (event.category || "chill") === activeFilter
         );
+
+  if (!authReady) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-100">
+        Загрузка...
+      </div>
+    );
+  }
 
   if (!user) {
     return (
